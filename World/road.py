@@ -1,5 +1,6 @@
 import numpy as np
 import pygame
+import view_filters
 from misc_funcs import rotate_vector_acw
 from World.placeable import Placeable
 
@@ -24,9 +25,10 @@ class StraightRoad(Road):
 
 
 def circle(x, radius):
-    if np.square(radius) - np.square(x-radius) < 0:
+    a = np.square(radius) - np.square(x-radius)
+    if a < 0:
         return np.nan
-    return np.sqrt(np.square(radius) - np.square(x-radius))
+    return np.sqrt(a)
 
 
 def circle_collision(relative_point, grid_location, grid_size, rotation, width):

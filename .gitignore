@@ -1,1 +1,5 @@
 /saved_models/
+/.idea/
+/image_assets/
+Pipfile.lock
+notes.txt

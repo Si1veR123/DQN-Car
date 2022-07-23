@@ -7,23 +7,13 @@ from World.placeable import SolidBlock, SolidRoadPath
 from World.generate_roads import generate_roads
 from SocketCommunication.tcp_socket import LocalTCPSocket
 
+from view_filters import AiVisOnly, NoAiVis
+import view_filters
 
-FPS = 0
-PORT = 5656
-GRID_SIZE_PIXELS = 60
+from global_settings import *
 
-HEIGHT = 1081
-WIDTH = 1921
+# ======================================================================================================================
 
-USE_UNREAL_SOCKET = False
-
-VELOCITY_CONSTANT = .4
-
-# COLOURS
-COL_BACKGROUND = (97, 139, 74)
-COL_GRID = (37, 60, 47)
-COL_MOUSE_HIGHLIGHT = (109, 163, 77)
-COL_PLACED_ROAD = (84, 86, 86)
 
 # Create Window
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -31,12 +21,15 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 # Create World Object
 dimensions = (WIDTH//GRID_SIZE_PIXELS+1, HEIGHT//GRID_SIZE_PIXELS+1)
 
-world = World(None, GRID_SIZE_PIXELS, dimensions, COL_BACKGROUND)
+world = World(None, dimensions, COL_BACKGROUND)
 
 
 def draw_background(screen):
     # Background is drawn by world's placeables, but this is beneath
     screen.fill(COL_BACKGROUND)
+
+    if not view_filters.can_show_type("grid"):
+        return
 
     # Draw Grid
     [pygame.draw.line(screen, COL_GRID, (x * GRID_SIZE_PIXELS, 0), (x * GRID_SIZE_PIXELS, HEIGHT)) for x in
@@ -45,7 +38,7 @@ def draw_background(screen):
         range((HEIGHT // round(GRID_SIZE_PIXELS)) + 1)]
 
 
-# Map builder
+# ================================================= MAP BUILDER ========================================================
 mouse_grid = (0, 0)
 clock = pygame.time.Clock()
 run = True
@@ -89,6 +82,10 @@ while run:
         # replace block after drawing the highlight
         world.spawn_item(SolidBlock(COL_BACKGROUND, GRID_SIZE_PIXELS), mouse_grid)
 
+# ======================================================================================================================
+
+
+# ============================================= MAP GENERATION =========================================================
 # matrix of grid, where 1 indicates a painted road and 0 is empty
 painted_roads = [[1 if type(x) == SolidRoadPath else 0 for x in y] for y in world.grid]
 
@@ -101,10 +98,14 @@ for row_num, row in enumerate(roads):
         if col is not None:
             world.spawn_item(col, (col_num, row_num))
 
+# ======================================================================================================================
+
 world.socket = LocalTCPSocket(PORT) if USE_UNREAL_SOCKET else None
 
-# Game Loop
+# ================================================ GAME LOOP ===========================================================
 world.initiate_cars()
+
+view_filters.FILTERS.append(AiVisOnly())
 
 clock = pygame.time.Clock()
 run = True
@@ -130,6 +131,7 @@ while run:
         world.initiate_cars()
 
     pygame.display.update()
+# ======================================================================================================================
 
 world.ai_car.controller.q_learning.reward_graph()
 world.ai_car.controller.q_learning.save_model(r"E:\EPQ\PythonAI\saved_models\\")

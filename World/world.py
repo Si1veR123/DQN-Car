@@ -7,17 +7,22 @@ import pygame
 import typing
 import math
 import random
+import view_filters
+from global_settings import *
 
 
 class World:
-    def __init__(self, socket: typing.Union[LocalTCPSocket, None], grid_size, grid_dimensions, background_colour):
+    def __init__(self,
+                 socket: typing.Union[LocalTCPSocket, None],
+                 grid_dimensions: tuple,
+                 background_colour: tuple,
+                 ):
         self.socket = socket
 
         self.ai_car = AICar("ai_car")
         self.npc_cars = []
 
         self.grid = []
-        self.grid_size = grid_size
 
         self.reset_grid(background_colour, grid_dimensions)
 
@@ -29,7 +34,7 @@ class World:
         return self.npc_cars + [self.ai_car]
 
     def reset_grid(self, background_colour, grid_dimensions):
-        self.grid = [[SolidBlock(background_colour, self.grid_size) for _ in range(grid_dimensions[0])] for _ in range(grid_dimensions[1])]
+        self.grid = [[SolidBlock(background_colour, GRID_SIZE_PIXELS) for _ in range(grid_dimensions[0])] for _ in range(grid_dimensions[1])]
 
     def spawn_item(self, item: Placeable, grid_pos):
         self.grid[grid_pos[1]][grid_pos[0]] = item
@@ -49,7 +54,8 @@ class World:
 
                 if item.image is not None:
                     # offset by 1 to allow for 1px grid lines
-                    screen.blit(item.image, (math.floor(col_num * self.grid_size) + 1, math.floor(row_num * self.grid_size) + 1))
+                    if view_filters.can_show_type(item.name_id):
+                        screen.blit(item.image, (math.floor(col_num * GRID_SIZE_PIXELS) + 1, math.floor(row_num * GRID_SIZE_PIXELS) + 1))
 
     def initiate_cars(self):
         spawn_pos = []
@@ -62,7 +68,7 @@ class World:
 
         ai_loc = spawn_pos[0][0]
         ai_rot = spawn_pos[0][1]
-        self.ai_car.controller.location = (np.array(ai_loc) * self.grid_size) + np.array((self.grid_size / 2, self.grid_size / 2))
+        self.ai_car.controller.location = (np.array(ai_loc) * GRID_SIZE_PIXELS) + np.array((GRID_SIZE_PIXELS / 2, GRID_SIZE_PIXELS / 2))
         self.ai_car.controller.rotation = random.choice([ai_rot * 90, (ai_rot*90)-180])
 
         for car_num, car in enumerate(self.all_cars):
@@ -70,7 +76,7 @@ class World:
 
             try:
                 loc, rot = spawn_pos[car_num][0], spawn_pos[car_num][1]
-                car.controller.location = (np.array(loc) * self.grid_size) + np.array((self.grid_size / 2, self.grid_size / 2))
+                car.controller.location = (np.array(loc) * GRID_SIZE_PIXELS) + np.array((GRID_SIZE_PIXELS / 2, GRID_SIZE_PIXELS / 2))
                 car.controller.rotation = rot * 90
             except IndexError:
                 print("Couldnt spawn: ", car.object_name)
@@ -84,7 +90,8 @@ class World:
     def blit_cars(self, screen):
         for car in self.all_cars:
             car.tick()
-            car.draw_car(screen)
+            if view_filters.can_show_type("car"):
+                car.draw_car(screen)
 
     def car_collision(self):
         for car in self.all_cars:
@@ -92,11 +99,11 @@ class World:
             corners = car.get_corners()
 
             for corner in corners:
-                grid_pos = (corner // self.grid_size).astype(int).tolist()
+                grid_pos = (corner // GRID_SIZE_PIXELS).astype(int).tolist()
 
                 try:
                     placeable = self.grid[grid_pos[1]][grid_pos[0]]
-                    overlaps.append(placeable.overlap(corner % self.grid_size, self.grid_size))
+                    overlaps.append(placeable.overlap(corner % GRID_SIZE_PIXELS, GRID_SIZE_PIXELS))
                 except IndexError:
                     pass
 

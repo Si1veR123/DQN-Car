@@ -4,8 +4,11 @@ from World.car_controller import PlayerController
 from misc_funcs import rotate_vector_acw
 from World.placeable import Placeable
 
+import global_settings
+
 import numpy as np
 import pygame
+import view_filters
 
 
 class Car(ReplicatedTransform):
@@ -63,8 +66,9 @@ class AICar(Car):
         self.controller.steering_angle = 0
         self.controller.velocity = self.controller.start_velocity
 
-        self.controller.q_learning.decay_exploration_probability()
-        self.controller.q_learning.train()
+        if global_settings.TRAINING:  # global settings
+            self.controller.q_learning.decay_exploration_probability()
+            self.controller.q_learning.train()
 
         self.controller.distance_travelled = 0
 
@@ -105,8 +109,11 @@ class AICar(Car):
                 length = f * self.ray_check_frequency
                 break
 
-        if screen is not None:
+        if screen is not None and view_filters.can_show_type("ai_rays"):
             pygame.draw.line(screen, (255, 155, 155), start, (((end-start)/self.ray_distance)*length)+start)
+
+        if screen is not None and view_filters.can_show_type("ai_ray_collisions"):
+            pygame.draw.circle(screen, (255, 155, 155), (((end-start)/self.ray_distance)*length)+start, 4)
 
         return length
 

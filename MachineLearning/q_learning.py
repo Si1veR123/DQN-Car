@@ -20,7 +20,9 @@ import copy
 
 from matplotlib import pyplot
 
-LOAD_MODEL = r""
+import global_settings
+
+LOAD_MODEL = r"E:\EPQ\PythonAI\saved_models\custom_model_22.07;22.52_328"
 
 
 class QLearning:
@@ -30,12 +32,12 @@ class QLearning:
 
         self.frame_num = 0
 
-        # hyperparameters
-        self.learning_rate = 0.00001
-        self.discount_rate = 0.95
-        self.exploration_probability = 1
-        self.exploration_decay = 0.0001
-        self.network_copy_steps = 5000
+        # hyperparameters copied from global settings
+        self.learning_rate = global_settings.LEARNING_RATE
+        self.discount_rate = global_settings.DISCOUNT_RATE
+        self.exploration_probability = global_settings.EXPLORATION_PROBABILITY
+        self.exploration_decay = global_settings.EXPLORATION_DECAY
+        self.network_copy_steps = global_settings.TARGET_NET_COPY_STEPS
 
         if LOAD_MODEL:
             self.network = self.load_model(LOAD_MODEL)
@@ -46,7 +48,7 @@ class QLearning:
         self.target_network = copy.deepcopy(self.network)
 
         self.experience_buffer = []
-        self.train_amount = 0.7  # percent of experiences to train on
+        self.train_amount = 0.7  # fraction of experiences to train on
 
         self.reward_cache = []
 

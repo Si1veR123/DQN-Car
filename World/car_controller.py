@@ -44,7 +44,7 @@ class CarControllerKinematic(CarController):
         else:
             radius = 9999999999999999  # big number to simulate infinity
 
-        angular_change = (self.velocity*velocity_constant*5) / radius  # 10 makes it more realistic
+        angular_change = (self.velocity*velocity_constant*8) / radius  # 8 makes it more realistic
         self.rotation += angular_change
 
         self.location += rotate_vector_acw(np.array((0, self.velocity * velocity_constant)), -self.rotation)

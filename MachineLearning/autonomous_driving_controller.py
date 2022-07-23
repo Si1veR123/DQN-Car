@@ -21,7 +21,6 @@ class AutonomousDrivingController(CarControllerKinematic):
 
         self.ai_dead = False
 
-
     def update_transform(self, velocity_constant):
         """
         actions:
