@@ -21,7 +21,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 # Create World Object
 dimensions = (WIDTH//GRID_SIZE_PIXELS+1, HEIGHT//GRID_SIZE_PIXELS+1)
 
-world = World(None, dimensions, COL_BACKGROUND)
+world = World(None, dimensions)
 
 
 def draw_background(screen):
@@ -57,9 +57,9 @@ while run:
         round((pygame.mouse.get_pos()[1]) // GRID_SIZE_PIXELS)
     )
 
-    current_block = world.grid[mouse_grid[1]][mouse_grid[0]]
+    current_block = world.map.grid[mouse_grid[1]][mouse_grid[0]]
     if type(current_block) == SolidRoadPath:
-        world.blit_grid(screen, game_time)
+        world.map.blit_grid(screen, game_time)
         pygame.display.update()
         continue
 
@@ -74,7 +74,7 @@ while run:
     else:
         world.spawn_item(SolidBlock(COL_MOUSE_HIGHLIGHT, GRID_SIZE_PIXELS), mouse_grid)
 
-    world.blit_grid(screen, game_time)
+    world.map.blit_grid(screen, game_time)
 
     pygame.display.update()
 
@@ -87,9 +87,9 @@ while run:
 
 # ============================================= MAP GENERATION =========================================================
 # matrix of grid, where 1 indicates a painted road and 0 is empty
-painted_roads = [[1 if type(x) == SolidRoadPath else 0 for x in y] for y in world.grid]
+painted_roads = [[1 if type(x) == SolidRoadPath else 0 for x in y] for y in world.map.grid]
 
-world.reset_grid(COL_BACKGROUND, dimensions)
+world.map.reset_grid(dimensions)
 
 # create roads from painted roads
 roads = generate_roads(painted_roads, GRID_SIZE_PIXELS)
@@ -105,7 +105,7 @@ world.socket = LocalTCPSocket(PORT) if USE_UNREAL_SOCKET else None
 # ================================================ GAME LOOP ===========================================================
 world.initiate_cars()
 
-view_filters.FILTERS.append(AiVisOnly())
+# view_filters.FILTERS.append(AiVisOnly())
 
 clock = pygame.time.Clock()
 run = True
@@ -119,7 +119,7 @@ while run:
     draw_background(screen)
 
     # Update all placeables
-    world.blit_grid(screen, game_time)
+    world.map.blit_grid(screen, game_time)
     world.ai_car.trace_all_rays(world, screen)
 
     world.car_collision()

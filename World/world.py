@@ -8,43 +8,17 @@ import typing
 import math
 import random
 import view_filters
+import pickle
 from global_settings import *
 
 
-class World:
-    def __init__(self,
-                 socket: typing.Union[LocalTCPSocket, None],
-                 grid_dimensions: tuple,
-                 background_colour: tuple,
-                 ):
-        self.socket = socket
-
-        self.ai_car = AICar("ai_car")
-        self.npc_cars = []
-
+class Map:
+    def __init__(self, grid_dimensions):
         self.grid = []
+        self.reset_grid(grid_dimensions)
 
-        self.reset_grid(background_colour, grid_dimensions)
-
-        self.start_grid_location = (0, 0)
-        self.start_rotation = 0
-
-    @property
-    def all_cars(self):
-        return self.npc_cars + [self.ai_car]
-
-    def reset_grid(self, background_colour, grid_dimensions):
-        self.grid = [[SolidBlock(background_colour, GRID_SIZE_PIXELS) for _ in range(grid_dimensions[0])] for _ in range(grid_dimensions[1])]
-
-    def spawn_item(self, item: Placeable, grid_pos):
-        self.grid[grid_pos[1]][grid_pos[0]] = item
-
-        if item.replicate_spawn:
-            try:
-                self.socket.send_ue_data("spawn", item.name_id, {"gridx": grid_pos[0], "gridy": grid_pos[1]})
-            except AttributeError:
-                # socket is None, not in use
-                pass
+    def reset_grid(self, grid_dimensions):
+        self.grid = [[SolidBlock(COL_BACKGROUND, GRID_SIZE_PIXELS) for _ in range(grid_dimensions[0])] for _ in range(grid_dimensions[1])]
 
     def blit_grid(self, screen: pygame.surface.Surface, game_time):
         for row_num, row in enumerate(self.grid):
@@ -57,9 +31,39 @@ class World:
                     if view_filters.can_show_type(item.name_id):
                         screen.blit(item.image, (math.floor(col_num * GRID_SIZE_PIXELS) + 1, math.floor(row_num * GRID_SIZE_PIXELS) + 1))
 
+
+class World:
+    def __init__(self,
+                 socket: typing.Union[LocalTCPSocket, None],
+                 grid_dimensions: tuple,
+                 ):
+        self.socket = socket
+
+        self.ai_car = AICar("ai_car")
+        self.npc_cars = []
+
+        self.map = Map(grid_dimensions)
+
+        self.start_grid_location = (0, 0)
+        self.start_rotation = 0
+
+    @property
+    def all_cars(self):
+        return self.npc_cars + [self.ai_car]
+
+    def spawn_item(self, item: Placeable, grid_pos):
+        self.map.grid[grid_pos[1]][grid_pos[0]] = item
+
+        if item.replicate_spawn:
+            try:
+                self.socket.send_ue_data("spawn", item.name_id, {"gridx": grid_pos[0], "gridy": grid_pos[1]})
+            except AttributeError:
+                # socket is None, not in use
+                pass
+
     def initiate_cars(self):
         spawn_pos = []
-        for row_num, row in enumerate(self.grid):
+        for row_num, row in enumerate(self.map.grid):
             for col_num, col in enumerate(row):
                 if type(col) == StraightRoad:
                     spawn_pos.append(((col_num, row_num), col.direction))
@@ -102,7 +106,7 @@ class World:
                 grid_pos = (corner // GRID_SIZE_PIXELS).astype(int).tolist()
 
                 try:
-                    placeable = self.grid[grid_pos[1]][grid_pos[0]]
+                    placeable = self.map.grid[grid_pos[1]][grid_pos[0]]
                     overlaps.append(placeable.overlap(corner % GRID_SIZE_PIXELS, GRID_SIZE_PIXELS))
                 except IndexError:
                     pass

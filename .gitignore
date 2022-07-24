@@ -3,3 +3,7 @@
 /image_assets/
 Pipfile.lock
 notes.txt
+__pycache__/
+MachineLearning/__pycache__/
+SocketCommunication/__pycache__/
+World/__pycache__/

@@ -96,16 +96,16 @@ class AICar(Car):
         for f in range(self.ray_distance//self.ray_check_frequency):
             ray_point = start + ((end - start)/self.ray_distance * (f * self.ray_check_frequency))
 
-            ray_grid_box = (ray_point // world.grid_size).astype(int).tolist()
+            ray_grid_box = (ray_point // global_settings.GRID_SIZE_PIXELS).astype(int).tolist()
 
             try:
-                placeable = world.grid[ray_grid_box[1]][ray_grid_box[0]]
+                placeable = world.map.grid[ray_grid_box[1]][ray_grid_box[0]]
                 placeable: Placeable
             except IndexError:
                 continue
 
             # not overlapping road
-            if not placeable.overlap(ray_point % world.grid_size, world.grid_size):
+            if not placeable.overlap(ray_point % global_settings.GRID_SIZE_PIXELS, global_settings.GRID_SIZE_PIXELS):
                 length = f * self.ray_check_frequency
                 break
 

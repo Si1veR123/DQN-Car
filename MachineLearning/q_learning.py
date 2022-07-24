@@ -22,8 +22,6 @@ from matplotlib import pyplot
 
 import global_settings
 
-LOAD_MODEL = r"E:\EPQ\PythonAI\saved_models\custom_model_22.07;22.52_328"
-
 
 class QLearning:
     def __init__(self, state_n, actions_n):
@@ -39,9 +37,9 @@ class QLearning:
         self.exploration_decay = global_settings.EXPLORATION_DECAY
         self.network_copy_steps = global_settings.TARGET_NET_COPY_STEPS
 
-        if LOAD_MODEL:
-            self.network = self.load_model(LOAD_MODEL)
-            print("LOADED: ", LOAD_MODEL.split("\\")[-1])
+        if global_settings.LOAD_MODEL:
+            self.network = self.load_model(global_settings.LOAD_MODEL)
+            print("LOADED: ", global_settings.LOAD_MODEL.split("\\")[-1])
         else:
             self.network = self.create_network()
 
