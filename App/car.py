@@ -1,8 +1,8 @@
 from SocketCommunication.replicate import ReplicatedTransform
 from MachineLearning.autonomous_driving_controller import AutonomousDrivingController
-from World.car_controller import PlayerController
+from App.car_controller import PlayerController
 from misc_funcs import rotate_vector_acw
-from World.placeable import Placeable
+from App.placeable import Placeable
 
 import global_settings
 

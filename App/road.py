@@ -2,7 +2,7 @@ import numpy as np
 import pygame
 import view_filters
 from misc_funcs import rotate_vector_acw
-from World.placeable import Placeable
+from App.placeable import Placeable
 
 
 class Road(Placeable):
@@ -16,9 +16,11 @@ class StraightRoad(Road):
         road_images = []
 
     def __init__(self, direction, grid_size):
-        super().__init__(self.road_images[0], "straight_road", grid_size)
         self.direction = direction  # 0 or 1, 1 is horizontal
-        self.image = pygame.transform.rotate(self.image, 90*self.direction)
+        super().__init__("straight_road", grid_size)
+
+    def create_grid_image(self):
+        return pygame.transform.rotate(self.road_images[0], 90*self.direction)
 
     def overlap(self, relative_point, grid_size):
         return True
@@ -69,12 +71,14 @@ class CurvedRoad(Road):
         road_images = []
 
     def __init__(self, rotation, section, grid_size):
-
-        super().__init__(self.road_images[section], "curved_road_" + str(section), grid_size)
         self.rotation = rotation  # rotation is 0-3
         self.section = section  # 0-3, as curved road is 4 grid spaces
         self.width = 2
-        self.image = pygame.transform.rotate(self.image, -self.rotation*90)
+
+        super().__init__("curved_road_" + str(section), grid_size)
+
+    def create_grid_image(self):
+        return pygame.transform.rotate(self.road_images[self.section], -self.rotation*90)
 
     @property
     def grid_location(self):
@@ -89,12 +93,6 @@ class CurvedRoad(Road):
 
 
 class LargeCurvedRoad(CurvedRoad):
-    def __init__(self, rotation, section, grid_size):
-
-        super().__init__(rotation, section, grid_size)
-
-        self.width = 4
-
     try:
         road_images = [
             None,
@@ -120,3 +118,9 @@ class LargeCurvedRoad(CurvedRoad):
 
     except FileNotFoundError:
         road_images = []
+
+    def __init__(self, rotation, section, grid_size):
+        super().__init__(rotation, section, grid_size)
+
+        self.width = 4
+

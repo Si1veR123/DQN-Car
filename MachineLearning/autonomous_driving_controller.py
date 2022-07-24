@@ -1,4 +1,4 @@
-from World.car_controller import CarControllerKinematic
+from App.car_controller import CarControllerKinematic
 from MachineLearning.q_learning import CustomModelQLearning, QLearning
 
 

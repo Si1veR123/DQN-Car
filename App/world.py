@@ -1,7 +1,7 @@
 from SocketCommunication.tcp_socket import LocalTCPSocket
-from World.placeable import Placeable, SolidBlock
-from World.car import AICar
-from World.road import StraightRoad
+from App.placeable import Placeable, SolidBlock
+from App.car import AICar
+from App.road import StraightRoad
 import numpy as np
 import pygame
 import typing
@@ -20,7 +20,7 @@ class Map:
     def reset_grid(self, grid_dimensions):
         self.grid = [[SolidBlock(COL_BACKGROUND, GRID_SIZE_PIXELS) for _ in range(grid_dimensions[0])] for _ in range(grid_dimensions[1])]
 
-    def blit_grid(self, screen: pygame.surface.Surface, game_time):
+    def blit_grid(self, screen, game_time):
         for row_num, row in enumerate(self.grid):
             for col_num, item in enumerate(row):
 
@@ -30,6 +30,20 @@ class Map:
                     # offset by 1 to allow for 1px grid lines
                     if view_filters.can_show_type(item.name_id):
                         screen.blit(item.image, (math.floor(col_num * GRID_SIZE_PIXELS) + 1, math.floor(row_num * GRID_SIZE_PIXELS) + 1))
+
+    def save_map(self, path):
+        with open(path, "wb") as file:
+            pickle.dump(self.grid, file)
+
+    @classmethod
+    def load_map(cls, path):
+        with open(path, "rb") as file:
+            grid_loaded = pickle.load(file)
+
+        map = cls(np.array(grid_loaded).shape[::-1])
+        map.grid = grid_loaded
+
+        return map
 
 
 class World:
@@ -42,10 +56,10 @@ class World:
         self.ai_car = AICar("ai_car")
         self.npc_cars = []
 
-        self.map = Map(grid_dimensions)
-
-        self.start_grid_location = (0, 0)
-        self.start_rotation = 0
+        if LOAD_MAP:
+            self.map = Map.load_map(LOAD_MAP)
+        else:
+            self.map = Map(grid_dimensions)
 
     @property
     def all_cars(self):

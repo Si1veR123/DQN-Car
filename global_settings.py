@@ -7,6 +7,8 @@ WIDTH = 1921
 
 USE_UNREAL_SOCKET = False
 
+LOAD_MAP = r"E:\EPQ\PythonAI\saved_maps\24.07;19.02"
+
 VELOCITY_CONSTANT = .4
 
 # COLOURS

@@ -1,5 +1,5 @@
-from World.road import *
-from World.placeable import SolidBlock
+from App.road import *
+from App.placeable import SolidBlock
 import numpy as np
 import misc_funcs
 
