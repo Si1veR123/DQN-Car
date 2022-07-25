@@ -1,11 +1,12 @@
 import pygame
-import typing
-import global_settings
+import global_settings as gs
 
 
 class Placeable:
+    """
+    A base class for anything that will be in the map's grid.
+    """
     def __init__(self, name_id, grid_size):
-        # name_id is what the placeable is called, not unique
 
         # scale to 2 pixels less than grid size to allow for 1px grid lines
         try:
@@ -13,48 +14,74 @@ class Placeable:
         except ValueError:
             self.image = None
 
+        # name_id is what the Placeable is called, not unique to the instance
+        # isn't static as some child classes have multiple name_ids for different sections, e.g. curved roads
         self.name_id = name_id
 
+        # whether spawn is replicated to Unreal Engine
         self.replicate_spawn = True
 
     def create_grid_image(self):
+        """
+        Uses self attributes to return a Surface, which is the Placeables image on the grid
+        :return:
+        """
         raise NotImplementedError
 
     def tick(self, game_time):
+        """
+        Runs every frame
+        :param game_time: game time in seconds
+        """
         pass
 
-    def overlap(self, relative_point, grid_size):
+    def overlap(self, relative_point):
+        """
+        Whether a car can overlap at this point.
+        :param relative_point: pixel location relative to top left of the grid location
+        :return: bool, true if relative point is allowed for a car e.g. road
+        """
         return False
 
     # Custom Pickling
     def __getstate__(self):
+        """Called when pickling"""
+
+        # get all attributes
         state = self.__dict__.copy()
-
+        # don't save image, as Surface can't be pickled
         del state["image"]
-
         return state
 
     def __setstate__(self, state):
+        """Called when unpickling"""
+
+        # reload state to self
         self.__dict__.update(state)
 
-        # before this is called, all attributes that are used by this method should be set to prevent errors
-        self.image = pygame.transform.scale(self.create_grid_image(), tuple([global_settings.GRID_SIZE_PIXELS - 1]*2))
+        # reload image using the method, and resize it
+        self.image = pygame.transform.scale(self.create_grid_image(), tuple([gs.GRID_SIZE_PIXELS - 1]*2))
 
 
 class SolidBlock(Placeable):
+    """Solid colour block"""
     def __init__(self, colour, grid_size):
         self.colour = colour
         super().__init__("solid", grid_size)
         self.replicate_spawn = False
 
     def create_grid_image(self):
-        surface = pygame.surface.Surface((100, 100))
+        # Solid colour surface
+        surface = pygame.surface.Surface((1, 1))
         surface.fill(self.colour)
         return surface
 
 
 class SolidRoadPath(SolidBlock):
-    # in map builder, placed on confirmed road places
+    """
+    In map builder, placed on confirmed road places
+    Only difference from normal solid block, is that this fades in
+    """
     def __init__(self, colour, grid_size, game_time):
         super().__init__(colour, grid_size)
         self.start_time = game_time

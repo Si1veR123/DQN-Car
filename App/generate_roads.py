@@ -1,16 +1,24 @@
+"""
+Handles generation of a grid of roads from a grid of drawn in blocks
+"""
+
 from App.road import *
-from App.placeable import SolidBlock
 import numpy as np
 import misc_funcs
 
-# list of tuples
-# [0] of tuple is the 2d matrix for the pattern
-# [1] of the tuple is a list of data for each block in the pattern
+"""
+patterns is a list of tuples
+[0] of tuple is the 2d matrix for the pattern to recognise
+[1] of tuple is a list of each block's data in the pattern
 
+  the block's data is a dictionary:
+    centre: a 2d tuple representing this block's location relative to the top left of the pattern
+    lock: causes other patterns to be unable to overwrite the current pattern if placed, and no other patterns can match
+      in the same place. this prevents situations where 2 valid patterns can overlap and not create a clear road path.
+    type: Placeable class that is spawned in this position. If None, it is made empty.
+    parameters: kwargs that the Placeable is initiated with
+"""
 
-# if type is None dont change block
-# 'lock' causes other patterns to be unable to overwrite the current pattern if placed, and no other patterns can match
-# in the same place
 patterns = [
     (
         [[1, 1]], [
@@ -181,34 +189,49 @@ def get_pattern_data(pattern):
 def generate_roads(drawn_roads, grid_size):
     """
     uses patterns to convert drawn roads to road placeables
-    :param drawn_roads: 2D matrix of 1s and 0s
-    :return: matrix of None or road placeable
+    :param drawn_roads: 2D matrix of 1s and 0s, where 1 is a drawn grid position
+    :return: matrix of None or Road object
     """
 
     shape = np.array(drawn_roads).shape
-    roads = [[None for _ in range(shape[1])] for _ in range(shape[0])]
 
+    # initiate empty 2d array of roads in same shape as grid
+    roads = np.empty(shape=shape)
+    roads.fill(None)
+
+    # iterate over the patterns to search for
     for pattern in map(lambda x: x[0], patterns):
+
+        # get the data for blocks in this pattern
         pattern_data = get_pattern_data(pattern)
+
+        # find grid locations (top left of pattern) where this pattern is found
         locations = search_pattern(drawn_roads, pattern)
 
+        # for every place that the pattern occurs
         for location in locations:
+            # for every block in the pattern
             for block in pattern_data:
                 block: dict  # prevents warnings
+
+                # get the current block's grid location
                 block_location = (block["centre"][0] + location[0], block["centre"][1] + location[1])
 
                 if block["lock"]:
-                    # if lock, prevent other blocks being placed here by setting that it was never drawn in
+                    # if lock, prevent other blocks being placed here by setting that it was never drawn in,
+                    # preventing patterns matching here
                     drawn_roads[block_location[1]][block_location[0]] = 0
 
                 if block["type"] is not None:
-
+                    # initiate road object with given parameters
                     parameters = block["parameters"]
                     parameters["grid_size"] = grid_size
                     new_road = block["type"](**parameters)
 
+                    # set this position in the roads matrix to the road
                     roads[block_location[1]][block_location[0]] = new_road
                 else:
+                    # don't create a road object
                     roads[block_location[1]][block_location[0]] = None
 
     return roads
@@ -223,15 +246,20 @@ def search_pattern(drawn_roads, pattern):
     """
     pattern_size = np.array(pattern).shape[::-1]
     locations = []
+    # iterate over every block in grid
     for row_num, row in enumerate(drawn_roads):
         for col_num in range(len(row)):
-
+            # current block
             start = np.array([col_num, row_num])
 
+            # get a matrix of the pattern's size, with top left location at 'start'
             compare_pattern = misc_funcs.cut_matrix(drawn_roads, start, start + pattern_size)
+
+            # out of range if None
             if compare_pattern is None:
                 continue
 
+            # if the pattern matches, add current block location
             if np.array_equal(np.array(compare_pattern), np.array(pattern)):
                 locations.append((col_num, row_num))
 

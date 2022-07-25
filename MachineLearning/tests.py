@@ -2,6 +2,7 @@ from MachineLearning.q_learning import CustomModelQLearning
 
 
 def test_target_net():
+    # tests that target net works correctly
     q_learning = CustomModelQLearning(5, 3)
 
     normal_q = q_learning.get_q_values((1, 1, 1, 1, 1), target=False)

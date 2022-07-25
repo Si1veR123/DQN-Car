@@ -20,7 +20,7 @@ import copy
 
 from matplotlib import pyplot
 
-import global_settings
+import global_settings as gs
 
 
 class QLearning:
@@ -31,15 +31,15 @@ class QLearning:
         self.frame_num = 0
 
         # hyperparameters copied from global settings
-        self.learning_rate = global_settings.LEARNING_RATE
-        self.discount_rate = global_settings.DISCOUNT_RATE
-        self.exploration_probability = global_settings.EXPLORATION_PROBABILITY
-        self.exploration_decay = global_settings.EXPLORATION_DECAY
-        self.network_copy_steps = global_settings.TARGET_NET_COPY_STEPS
+        self.learning_rate = gs.LEARNING_RATE
+        self.discount_rate = gs.DISCOUNT_RATE
+        self.exploration_probability = gs.EXPLORATION_PROBABILITY
+        self.exploration_decay = gs.EXPLORATION_DECAY
+        self.network_copy_steps = gs.TARGET_NET_COPY_STEPS
 
-        if global_settings.LOAD_MODEL:
-            self.network = self.load_model(global_settings.LOAD_MODEL)
-            print("LOADED: ", global_settings.LOAD_MODEL.split("\\")[-1])
+        if gs.LOAD_MODEL:
+            self.network = self.load_model(gs.LOAD_MODEL)
+            print("LOADED: ", gs.LOAD_MODEL)
         else:
             self.network = self.create_network()
 
@@ -136,15 +136,15 @@ class QLearning:
         pyplot.plot(self.reward_cache)
         pyplot.show()
 
-    def save_model(self, path):
+    def save_model(self):
         # time and average of rewards
-        name = path + "keras_model_" + datetime.datetime.now().strftime("%d.%m;%H.%M") + "_" + str(int(sum(self.reward_cache)/len(self.reward_cache)))
+        name = gs.SAVED_MODELS_ROOT + "keras_model_" + datetime.datetime.now().strftime("%d.%m;%H.%M") + "_" + str(int(sum(self.reward_cache)/len(self.reward_cache)))
 
         self.network.save(name, include_optimizer=True)
 
     @classmethod
     def load_model(cls, path):
-        return keras.models.load_model(path)
+        return keras.models.load_model(gs.SAVED_MODELS_ROOT + path)
 
 
 class CustomModelQLearning(QLearning):
@@ -164,11 +164,11 @@ class CustomModelQLearning(QLearning):
     def fit(self, state, correct_q_values):
         self.network.train([state], [correct_q_values], epochs=1, log=False)
 
-    def save_model(self, path):
+    def save_model(self):
         # time and average of rewards
-        name = path + "custom_model_" + datetime.datetime.now().strftime("%d.%m;%H.%M") + "_" + str(int(sum(self.reward_cache) / len(self.reward_cache)))
+        name = gs.SAVED_MODELS_ROOT + "custom_model_" + datetime.datetime.now().strftime("%d.%m;%H.%M") + "_" + str(int(sum(self.reward_cache) / len(self.reward_cache)))
         self.network.save_to_file(name)
 
     @classmethod
-    def load_model(cls, path):
-        return NeuralNetwork.load_from_file(path)
+    def load_model(cls, name):
+        return NeuralNetwork.load_from_file(gs.SAVED_MODELS_ROOT + name)

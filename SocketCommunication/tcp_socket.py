@@ -1,3 +1,7 @@
+"""
+TCP Socket used to communicate with Unreal Engine
+"""
+
 import socket
 
 
@@ -14,5 +18,5 @@ class LocalTCPSocket:
         #  e.g. CAR;CAR_5;locx:50,locy:50,locz:50
 
         string = data_type + ";" + object_name + ";" + ",".join([str(entry[0])+":"+str(entry[1]) for entry in data.items()])
-        print(string)
+        print("SENDING TO UE:", string)
         self.s.sendall(string.encode())

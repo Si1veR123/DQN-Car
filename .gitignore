@@ -1,6 +1,8 @@
 /saved_models/
+/saved_maps/
 /.idea/
-/image_assets/
+large_curve.png
+curve_road.png
 Pipfile.lock
 notes.txt
 __pycache__/

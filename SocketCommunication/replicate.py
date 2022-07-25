@@ -1,10 +1,15 @@
+"""
+Classes which are used by things that need to be regularly replicated to Unreal Engine
+"""
+
 from SocketCommunication.tcp_socket import LocalTCPSocket
 
 
 class ReplicatedData:
     """
     Inherited from by objects that require to be replicated to UE4
-    When replicating, 3 methods are called from replicate_data
+
+    When replicating, 3 methods are called from replicate_data()
         get_data_to_replicate is implemented by the object, returning data of the type required
         prepare_replicated_data is implemented by children for different data types, converting the previous data to dict
         send_data tells the socket to send the dict
@@ -14,8 +19,8 @@ class ReplicatedData:
         self.object_name = object_name
 
     def replicate_data(self, socket: LocalTCPSocket):
-        data = self.get_data_to_replicate()
-        prepared = self.prepare_replicated_data(data)
+        data = self.get_data_to_replicate()  # implemented by object that is replicating
+        prepared = self.prepare_replicated_data(data)  # implemented by different data type children
         self.send_data(socket, prepared)
 
     def prepare_replicated_data(self, data) -> dict:

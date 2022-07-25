@@ -3,24 +3,30 @@ from App.placeable import Placeable, SolidBlock
 from App.car import AICar
 from App.road import StraightRoad
 import numpy as np
-import pygame
+import datetime
 import typing
 import math
 import random
 import view_filters
 import pickle
-from global_settings import *
+import global_settings as gs
 
 
 class Map:
+    """
+    The Map object stores the map and handles drawing the grid, saving and loading.
+    Referenced in the World object.
+    """
     def __init__(self, grid_dimensions):
         self.grid = []
         self.reset_grid(grid_dimensions)
 
     def reset_grid(self, grid_dimensions):
-        self.grid = [[SolidBlock(COL_BACKGROUND, GRID_SIZE_PIXELS) for _ in range(grid_dimensions[0])] for _ in range(grid_dimensions[1])]
+        # Sets entire grid to SolidBlock with colour of background
+        self.grid = [[SolidBlock(gs.COL_BACKGROUND, gs.GRID_SIZE_PIXELS) for _ in range(grid_dimensions[0])] for _ in range(grid_dimensions[1])]
 
     def blit_grid(self, screen, game_time):
+        # Tick and draw each Placeable
         for row_num, row in enumerate(self.grid):
             for col_num, item in enumerate(row):
 
@@ -28,18 +34,23 @@ class Map:
 
                 if item.image is not None:
                     # offset by 1 to allow for 1px grid lines
+                    # check if item type can be shown
                     if view_filters.can_show_type(item.name_id):
-                        screen.blit(item.image, (math.floor(col_num * GRID_SIZE_PIXELS) + 1, math.floor(row_num * GRID_SIZE_PIXELS) + 1))
+                        screen.blit(item.image, (math.floor(col_num * gs.GRID_SIZE_PIXELS) + 1, math.floor(row_num * gs.GRID_SIZE_PIXELS) + 1))
 
-    def save_map(self, path):
-        with open(path, "wb") as file:
+    def save_map(self):
+        # save map by pickling the grid array
+        with open(gs.SAVED_MAPS_ROOT + datetime.datetime.now().strftime("%d.%m;%H.%M"), "wb") as file:
             pickle.dump(self.grid, file)
 
     @classmethod
-    def load_map(cls, path):
-        with open(path, "rb") as file:
+    def load_map(cls, name):
+        # load map by unpickling the grid array
+        print("LOADED:", name)
+        with open(gs.SAVED_MAPS_ROOT + name, "rb") as file:
             grid_loaded = pickle.load(file)
 
+        # create new class with grid set as loaded grid
         map = cls(np.array(grid_loaded).shape[::-1])
         map.grid = grid_loaded
 
@@ -47,17 +58,23 @@ class Map:
 
 
 class World:
+    """
+    The World object stores and handles all data for the current state of the level.
+        e.g. map, simulating cars, drawing everything to screen
+    """
     def __init__(self,
                  socket: typing.Union[LocalTCPSocket, None],
                  grid_dimensions: tuple,
                  ):
+        # socket used to communicate with Unreal Engine
         self.socket = socket
 
         self.ai_car = AICar("ai_car")
-        self.npc_cars = []
+        self.npc_cars = []  # TODO: fully implement and test npc cars. currently untested
 
-        if LOAD_MAP:
-            self.map = Map.load_map(LOAD_MAP)
+        # load map if provided with map name
+        if gs.LOAD_MAP:
+            self.map = Map.load_map(gs.LOAD_MAP)
         else:
             self.map = Map(grid_dimensions)
 
@@ -66,6 +83,7 @@ class World:
         return self.npc_cars + [self.ai_car]
 
     def spawn_item(self, item: Placeable, grid_pos):
+        # add placeable to grid and tell Unreal Engine if using socket
         self.map.grid[grid_pos[1]][grid_pos[0]] = item
 
         if item.replicate_spawn:
@@ -76,25 +94,34 @@ class World:
                 pass
 
     def initiate_cars(self):
+        """
+        Move all cars to initial (random) positions
+        Tell each car to reset state
+        """
+
+        # find all possible spawn places (straight roads)
         spawn_pos = []
         for row_num, row in enumerate(self.map.grid):
             for col_num, col in enumerate(row):
                 if type(col) == StraightRoad:
+                    # tuple of possible spawn location and road direction
                     spawn_pos.append(((col_num, row_num), col.direction))
 
         random.shuffle(spawn_pos)
 
         ai_loc = spawn_pos[0][0]
         ai_rot = spawn_pos[0][1]
-        self.ai_car.controller.location = (np.array(ai_loc) * GRID_SIZE_PIXELS) + np.array((GRID_SIZE_PIXELS / 2, GRID_SIZE_PIXELS / 2))
+        self.ai_car.controller.location = (np.array(ai_loc) * gs.GRID_SIZE_PIXELS) + np.array((gs.GRID_SIZE_PIXELS / 2, gs.GRID_SIZE_PIXELS / 2))
+        # rotate so car faces either backwards or forwards, randomly
         self.ai_car.controller.rotation = random.choice([ai_rot * 90, (ai_rot*90)-180])
 
-        for car_num, car in enumerate(self.all_cars):
-            car_num = car_num + 1
+        self.ai_car.reset_state()
 
+        # initiate npc cars
+        for car_num, car in enumerate(self.npc_cars):
             try:
                 loc, rot = spawn_pos[car_num][0], spawn_pos[car_num][1]
-                car.controller.location = (np.array(loc) * GRID_SIZE_PIXELS) + np.array((GRID_SIZE_PIXELS / 2, GRID_SIZE_PIXELS / 2))
+                car.controller.location = (np.array(loc) * gs.GRID_SIZE_PIXELS) + np.array((gs.GRID_SIZE_PIXELS / 2, gs.GRID_SIZE_PIXELS / 2))
                 car.controller.rotation = rot * 90
             except IndexError:
                 print("Couldnt spawn: ", car.object_name)
@@ -102,31 +129,38 @@ class World:
             car.reset_state()
 
     def update_cars(self, velocity_constant):
+        # update each car's controller
         for car in self.all_cars:
             car.controller.update_transform(velocity_constant)
 
     def blit_cars(self, screen):
+        # Tick and draw each car
         for car in self.all_cars:
             car.tick()
             if view_filters.can_show_type("car"):
                 car.draw_car(screen)
 
     def car_collision(self):
+        """
+        Check every car's collision, and if it has crashed, by checking if corners overlap roads
+        """
         for car in self.all_cars:
             overlaps = []
             corners = car.get_corners()
 
             for corner in corners:
-                grid_pos = (corner // GRID_SIZE_PIXELS).astype(int).tolist()
+                grid_pos = (corner // gs.GRID_SIZE_PIXELS).astype(int).tolist()
 
                 try:
                     placeable = self.map.grid[grid_pos[1]][grid_pos[0]]
-                    overlaps.append(placeable.overlap(corner % GRID_SIZE_PIXELS, GRID_SIZE_PIXELS))
+                    overlaps.append(placeable.overlap(corner % gs.GRID_SIZE_PIXELS))
                 except IndexError:
                     pass
 
+            # if not all corners on roads
             if not all(overlaps):
                 try:
+                    # remove npc car from list. if ValueError raised, isn't an npc car
                     self.npc_cars.remove(car)
                 except ValueError:
                     # ai car dead

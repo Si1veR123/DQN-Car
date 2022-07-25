@@ -1,4 +1,6 @@
 """
+Classes used to filter which elements should be displayed on screen
+
 Types:
 
 ai_rays
@@ -6,8 +8,7 @@ ai_ray_collisions
 
 grid
 
-
-
+collision
 """
 
 FILTERS = []
@@ -39,6 +40,10 @@ class BlockedFilter(Filter):
 
     def show_type(self, draw_type):
         return draw_type not in self.blocked
+
+
+class NoCollision(BlockedFilter):
+    blocked = ["collision"]
 
 
 class NoAiVis(BlockedFilter):

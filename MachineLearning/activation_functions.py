@@ -1,3 +1,7 @@
+"""
+Activation functions for Neural Network in neural_network_classes
+"""
+
 import numpy as np
 
 
@@ -28,7 +32,7 @@ def softmax(x, outputs):
 
 
 def linear(x, derivative=False):
-    if derivative:  # TODO: double check this is dervative
+    if derivative:
         return 1
     else:
         return x

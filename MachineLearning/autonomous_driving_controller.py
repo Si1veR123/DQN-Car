@@ -1,6 +1,8 @@
 from App.car_controller import CarControllerKinematic
 from MachineLearning.q_learning import CustomModelQLearning, QLearning
 
+import global_settings as gs
+
 
 class AutonomousDrivingController(CarControllerKinematic):
     def __init__(self, state_n):
@@ -16,6 +18,20 @@ class AutonomousDrivingController(CarControllerKinematic):
         self.max_velocity = 200
         self.max_steering = 80
         self.start_velocity = 10
+
+        self.distance_travelled = 0
+
+        self.ai_dead = False
+
+    def end_of_episode(self):
+        # New episode so reset controls
+        self.steering_angle = 0
+        self.velocity = self.start_velocity
+
+        if gs.TRAINING:
+            # start training and decay probability
+            self.q_learning.decay_exploration_probability()
+            self.q_learning.train()
 
         self.distance_travelled = 0
 

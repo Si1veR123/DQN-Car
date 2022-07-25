@@ -131,10 +131,10 @@ class Layer:
         self.output = np.empty(0)
 
         if activation == relu:
-            # He weight initialisation
+            # He weight initialisation, used for relu
             self.weights = np.random.normal(0, np.sqrt(2/input_size), size=(input_size, output_size))
         else:
-            # xavier
+            # xavier weight initialisation
 
             lower, upper = -(1.0 / np.sqrt(input_size)), (1.0 / np.sqrt(input_size))
             self.weights = lower + np.random.rand(input_size, output_size) * (upper-lower)
