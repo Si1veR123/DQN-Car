@@ -23,11 +23,12 @@ class Car(ReplicatedTransform):
         self.controller = controller
 
         # default is 400px, so scale
-        self.car_size = 40
+        scale = (gs.GRID_SIZE_PIXELS/60)
+        self.car_size = 40 * scale
         self.car_image = pygame.transform.scale(pygame.image.load("image_assets/car.png"), tuple([self.car_size]*2))
 
-        self.x_bound = 8
-        self.y_bound = 18
+        self.x_bound = 8 * scale
+        self.y_bound = 18 * scale
 
     def tick(self):
         pass
@@ -92,7 +93,7 @@ class AICar(Car):
             # convert to angle relative to car forward
             ray_angle = relative_ray_angle + self.controller.rotation
 
-            # rotate a vector along y axis clockwise by the ray angle. This vector, added to start is the end location
+            # rotate a vector, which is parallel to y, clockwise by the ray angle. This vector, added to start is the end location
             ray_end = ray_start + rotate_vector_acw((0, self.ray_distance), -ray_angle)
 
             # trace this ray for collisions, then set as state for AI

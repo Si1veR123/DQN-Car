@@ -82,16 +82,19 @@ class World:
     def all_cars(self):
         return self.npc_cars + [self.ai_car]
 
-    def spawn_item(self, item: Placeable, grid_pos):
+    def spawn_item_local(self, item: Placeable, grid_pos):
         # add placeable to grid and tell Unreal Engine if using socket
         self.map.grid[grid_pos[1]][grid_pos[0]] = item
 
-        if item.replicate_spawn:
-            try:
-                self.socket.send_ue_data("spawn", item.name_id, {"gridx": grid_pos[0], "gridy": grid_pos[1]})
-            except AttributeError:
-                # socket is None, not in use
-                pass
+    def replicate_map_spawn(self):
+        for row_num, row in enumerate(self.map.grid):
+            for col_num, col in enumerate(row):
+                if col.replicate_spawn:
+                    try:
+                        self.socket.send_ue_data("spawn", col.name_id, {"gridx": col_num, "gridy": row_num})
+                    except AttributeError:
+                        # socket is None, not in use
+                        pass
 
     def initiate_cars(self):
         """

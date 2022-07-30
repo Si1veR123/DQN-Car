@@ -1,6 +1,7 @@
 import numpy as np
 import pygame
 from misc_funcs import rotate_vector_acw
+import global_settings as gs
 
 
 class CarController:
@@ -44,7 +45,7 @@ class CarControllerKinematic(CarController):
         self.velocity = 0  # distance per frame, scaled by VELOCITY CONSTANT
         self.acceleration = 0
 
-        self.wheel_distance = 13
+        self.wheel_distance = 13 * (gs.GRID_SIZE_PIXELS/60)
 
     def update_transform(self, velocity_constant):
         # if steering angle is 0, dont calculate as sin(0)=0

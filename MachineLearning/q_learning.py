@@ -2,6 +2,7 @@ from MachineLearning.neural_network_classes import NeuralNetwork, ConnectedLayer
 from MachineLearning.activation_functions import relu, linear, tanh, sigmoid, softmax, leaky_relu
 
 import os
+# no gpu as it made it slower
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 from keras.models import Sequential
@@ -51,22 +52,13 @@ class QLearning:
         self.reward_cache = []
 
     def create_network(self):
-        network = Sequential([
-            Input(shape=(self.state_n,)),
-            Dense(12, activation="relu"),
-            Dense(18, activation="relu"),
-            Dense(9, activation="relu"),
-            Dense(self.actions_n, activation="relu")
-        ])
-
-        network.compile(loss="mse", optimizer=Adam(learning_rate=self.learning_rate), metrics=["accuracy"])
-        return network
+        raise NotImplementedError
 
     def decay_exploration_probability(self):
         self.exploration_probability = self.exploration_probability * np.exp(-self.exploration_decay)
 
     def get_action(self, state):
-        if random.random() < self.exploration_probability:
+        if random.random() < self.exploration_probability and gs.TRAINING:
             action = random.randint(0, self.actions_n-1)
             return action, [int(a == action) for a in range(self.actions_n)]
 
@@ -75,8 +67,7 @@ class QLearning:
         return q_values.index(max(q_values)), q_values
 
     def get_q_values(self, state, target=False):
-        net = self.target_network if target else self.network
-        return net(np.array([state]))[0].tolist()
+        raise NotImplementedError
 
     def update_experience_buffer(self, state, action, reward):
         self.experience_buffer.append((tuple(state), action, reward))
@@ -89,7 +80,7 @@ class QLearning:
         self.target_network = copy.deepcopy(self.network)
 
     def fit(self, state, correct_q_values):
-        self.network.fit(np.array([state]), np.array([correct_q_values]))
+        raise NotImplementedError
 
     def train(self):
         if len(self.experience_buffer):
@@ -112,10 +103,9 @@ class QLearning:
                 q_target = reward + (self.discount_rate * max_next_q_value)
 
                 # correct q values
-                q_values = self.get_q_values(state)
-                print("Q VALUES", q_values)
+                correct_q_values = self.get_q_values(state)
+                print("Q VALUES", correct_q_values)
 
-                correct_q_values = q_values
                 correct_q_values[action] = q_target
 
                 self.fit(state, correct_q_values)
@@ -135,6 +125,39 @@ class QLearning:
     def reward_graph(self):
         pyplot.plot(self.reward_cache)
         pyplot.show()
+
+    def save_model(self):
+        raise NotImplementedError
+
+    @classmethod
+    def load_model(cls, path):
+        raise NotImplementedError
+
+
+"""
+======= Individual Neural Network types =======
+"""
+
+
+class KerasModelQLearning(QLearning):
+    def create_network(self):
+        network = Sequential([
+            Input(shape=(self.state_n,)),
+            Dense(12, activation="relu"),
+            Dense(18, activation="relu"),
+            Dense(9, activation="relu"),
+            Dense(self.actions_n, activation="relu")
+        ])
+
+        network.compile(loss="mse", optimizer=Adam(learning_rate=self.learning_rate), metrics=["accuracy"])
+        return network
+
+    def get_q_values(self, state, target=False):
+        net = self.target_network if target else self.network
+        return net(np.array([state]))[0].tolist()
+
+    def fit(self, state, correct_q_values):
+        self.network.fit(np.array([state]), np.array([correct_q_values]))
 
     def save_model(self):
         # time and average of rewards

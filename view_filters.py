@@ -51,4 +51,7 @@ class NoAiVis(BlockedFilter):
 
 
 class AiVisOnly(AllowedFilter):
-    allowed = ["ai_ray_collisions", "car"]
+    def __init__(self, rays=False):
+        self.allowed = ["ai_ray_collisions", "car"]
+        if rays:
+            self.allowed.append("ai_rays")

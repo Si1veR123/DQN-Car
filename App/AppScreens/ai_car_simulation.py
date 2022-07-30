@@ -26,6 +26,7 @@ def run_ai_car_simulation(screen, world: World, fps=None):
 
     # dont show collision by default
     view_filters.FILTERS.append(view_filters.NoCollision())
+    # view_filters.FILTERS.append(view_filters.AiVisOnly(True))
 
     clock = pygame.time.Clock()
     run = True

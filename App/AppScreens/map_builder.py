@@ -50,10 +50,10 @@ def run_map_builder(screen, world: World, fps=None):
 
         if clicked:
             # lock in current grid position to be a road
-            world.spawn_item(SolidRoadPath(gs.COL_PLACED_ROAD, gs.GRID_SIZE_PIXELS, game_time), mouse_grid)
+            world.spawn_item_local(SolidRoadPath(gs.COL_PLACED_ROAD, gs.GRID_SIZE_PIXELS, game_time), mouse_grid)
         else:
             # color the current grid position with highlighted color
-            world.spawn_item(SolidBlock(gs.COL_MOUSE_HIGHLIGHT, gs.GRID_SIZE_PIXELS), mouse_grid)
+            world.spawn_item_local(SolidBlock(gs.COL_MOUSE_HIGHLIGHT, gs.GRID_SIZE_PIXELS), mouse_grid)
 
         world.map.blit_grid(screen, game_time)
 
@@ -61,7 +61,7 @@ def run_map_builder(screen, world: World, fps=None):
 
         if not clicked:
             # replace block after drawing the highlight
-            world.spawn_item(SolidBlock(gs.COL_BACKGROUND, gs.GRID_SIZE_PIXELS), mouse_grid)
+            world.spawn_item_local(SolidBlock(gs.COL_BACKGROUND, gs.GRID_SIZE_PIXELS), mouse_grid)
 
     # matrix of grid, where 1 indicates a painted road and 0 is empty
     painted_roads = [[1 if type(x) == SolidRoadPath else 0 for x in y] for y in world.map.grid]
@@ -75,7 +75,7 @@ def run_map_builder(screen, world: World, fps=None):
     for row_num, row in enumerate(roads):
         for col_num, col in enumerate(row):
             if col is not None:
-                world.spawn_item(col, (col_num, row_num))
+                world.spawn_item_local(col, (col_num, row_num))
 
     save = input("Save Map (y/n):") == "y"
     if save:

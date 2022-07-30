@@ -112,7 +112,7 @@ class NeuralNetwork:
             self.reset()
             learning_rate += step
 
-        return dict(sorted(learning_rate_error.items(), key=lambda x:x[1]))
+        return dict(sorted(learning_rate_error.items(), key=lambda x: x[1]))
 
     def save_to_file(self, filename="saved_network.pickle"):
         with open(filename, "wb") as file:

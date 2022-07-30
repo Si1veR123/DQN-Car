@@ -1,7 +1,7 @@
 """
 TCP Socket used to communicate with Unreal Engine
 """
-
+import time
 import socket
 
 
@@ -10,7 +10,11 @@ class LocalTCPSocket:
         self.port = port
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind(("localhost", port))
+        print("Waiting for connection")
         self.s.listen(1)
+        conn, address = self.s.accept()
+        self.conn = conn
+        print("Connected")
 
     def send_ue_data(self, data_type: str, object_name: str, data: dict):
         # TYPE;NAME;name1:data1,name2:data2
@@ -19,4 +23,6 @@ class LocalTCPSocket:
 
         string = data_type + ";" + object_name + ";" + ",".join([str(entry[0])+":"+str(entry[1]) for entry in data.items()])
         print("SENDING TO UE:", string)
-        self.s.sendall(string.encode())
+        time.sleep(0.02)
+        padded = string + "@"*(50 - len(string))
+        self.conn.sendall(padded.encode())

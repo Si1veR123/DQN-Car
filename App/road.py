@@ -57,7 +57,7 @@ def circle_collision_road(relative_point, grid_location, grid_size, rotation, wi
 
     """
     rotate relative point about center of grid square. then we can use relative point ignoring rotation.
-    relative point can be processed where the road is like this
+    relative point can then be processed as if the road is like this
     ░░░░░░░░█████
     ░░░░░███░░░░░
     ░░░██░░░░░░░░

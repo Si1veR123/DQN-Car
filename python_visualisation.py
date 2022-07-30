@@ -15,7 +15,10 @@ screen = pygame.display.set_mode((gs.WIDTH, gs.HEIGHT))
 
 # Create World Object
 dimensions = (gs.WIDTH//gs.GRID_SIZE_PIXELS+1, gs.HEIGHT//gs.GRID_SIZE_PIXELS+1)
-world = World(None, dimensions)
+
+socket = LocalTCPSocket(gs.PORT) if gs.USE_UNREAL_SOCKET else None
+
+world = World(socket, dimensions)
 
 
 # ================================================= MAP BUILDER ========================================================
@@ -24,8 +27,7 @@ world = World(None, dimensions)
 if not gs.LOAD_MAP:
     run_map_builder(screen, world, gs.FPS)
 
-
-world.socket = LocalTCPSocket(gs.PORT) if gs.USE_UNREAL_SOCKET else None
+world.replicate_map_spawn()
 
 # ================================================ GAME LOOP ===========================================================
 run_ai_car_simulation(screen, world, gs.FPS)
