@@ -194,10 +194,11 @@ def generate_roads(drawn_roads, grid_size):
     """
 
     shape = np.array(drawn_roads).shape
+    print(shape)
 
     # initiate empty 2d array of roads in same shape as grid
-    roads = np.empty(shape=shape)
-    roads.fill(None)
+
+    roads = [[None for _ in range(shape[1])] for _ in range(shape[0])]
 
     # iterate over the patterns to search for
     for pattern in map(lambda x: x[0], patterns):

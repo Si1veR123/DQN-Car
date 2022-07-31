@@ -21,8 +21,10 @@ def collision_filter(screen, world):
             pygame.draw.rect(screen, colour, pygame.rect.Rect((x, y), (3, 3)))
 
 
-def run_ai_car_simulation(screen, world: World, fps=None):
+def run_ai_car_simulation(screen, world: World):
     world.initiate_cars()
+
+    fps = gs.FPS
 
     # dont show collision by default
     view_filters.FILTERS.append(view_filters.NoCollision())
@@ -58,6 +60,8 @@ def run_ai_car_simulation(screen, world: World, fps=None):
 
         # Draw all cars to screen
         world.blit_cars(screen)
+
+        world.blit_ai_action(screen)
 
         # If AI car has crashed, reset all cars
         if world.ai_car.controller.ai_dead:

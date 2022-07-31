@@ -7,12 +7,12 @@ import pygame
 import view_filters
 
 
-def draw_background(screen):
+def draw_background(screen, grid=True):
     # Background is drawn by world's placeables, but this is beneath
     screen.fill(gs.COL_BACKGROUND)
 
     # Only draw grid if the filter allows it
-    if not view_filters.can_show_type("grid"):
+    if not view_filters.can_show_type("grid") or not grid:
         return
 
     # Draw Grid

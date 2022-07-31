@@ -2,6 +2,7 @@ from SocketCommunication.tcp_socket import LocalTCPSocket
 from App.placeable import Placeable, SolidBlock
 from App.car import AICar
 from App.road import StraightRoad
+import pygame
 import numpy as np
 import datetime
 import typing
@@ -10,6 +11,7 @@ import random
 import view_filters
 import pickle
 import global_settings as gs
+import os
 
 
 class Map:
@@ -27,6 +29,7 @@ class Map:
 
     def blit_grid(self, screen, game_time):
         # Tick and draw each Placeable
+
         for row_num, row in enumerate(self.grid):
             for col_num, item in enumerate(row):
 
@@ -38,10 +41,18 @@ class Map:
                     if view_filters.can_show_type(item.name_id):
                         screen.blit(item.image, (math.floor(col_num * gs.GRID_SIZE_PIXELS) + 1, math.floor(row_num * gs.GRID_SIZE_PIXELS) + 1))
 
-    def save_map(self):
+    def spawn_item_local(self, item: Placeable, grid_pos):
+        self.grid[grid_pos[1]][grid_pos[0]] = item
+
+    def save_map(self, screen):
+        name = datetime.datetime.now().strftime("%d.%m;%H.%M")
+        pygame.image.save_extended(screen, gs.SAVED_MAPS_ROOT + name + ".png")
+
         # save map by pickling the grid array
-        with open(gs.SAVED_MAPS_ROOT + datetime.datetime.now().strftime("%d.%m;%H.%M"), "wb") as file:
+        with open(gs.SAVED_MAPS_ROOT + name, "wb") as file:
             pickle.dump(self.grid, file)
+            file.flush()
+        print("Saved map and image.")
 
     @classmethod
     def load_map(cls, name):
@@ -54,7 +65,9 @@ class Map:
         map = cls(np.array(grid_loaded).shape[::-1])
         map.grid = grid_loaded
 
-        return map
+        image = pygame.image.load_extended(gs.SAVED_MAPS_ROOT + name + ".png")
+
+        return map, image
 
 
 class World:
@@ -64,7 +77,7 @@ class World:
     """
     def __init__(self,
                  socket: typing.Union[LocalTCPSocket, None],
-                 grid_dimensions: tuple,
+                 map: Map
                  ):
         # socket used to communicate with Unreal Engine
         self.socket = socket
@@ -72,19 +85,11 @@ class World:
         self.ai_car = AICar("ai_car")
         self.npc_cars = []  # TODO: fully implement and test npc cars. currently untested
 
-        # load map if provided with map name
-        if gs.LOAD_MAP:
-            self.map = Map.load_map(gs.LOAD_MAP)
-        else:
-            self.map = Map(grid_dimensions)
+        self.map = map
 
     @property
     def all_cars(self):
         return self.npc_cars + [self.ai_car]
-
-    def spawn_item_local(self, item: Placeable, grid_pos):
-        # add placeable to grid and tell Unreal Engine if using socket
-        self.map.grid[grid_pos[1]][grid_pos[0]] = item
 
     def replicate_map_spawn(self):
         for row_num, row in enumerate(self.map.grid):
@@ -168,3 +173,21 @@ class World:
                 except ValueError:
                     # ai car dead
                     self.ai_car.controller.ai_dead = True
+
+    def blit_ai_action(self, screen):
+        width, height = screen.get_size()
+
+        left_rect = pygame.rect.Rect(10, height-60, 50, 50)
+        down_rect = pygame.rect.Rect(70, height-60, 50, 50)
+        right_rect = pygame.rect.Rect(130, height-60, 50, 50)
+        up_rect = pygame.rect.Rect(70, height-120, 50, 50)
+
+        action = self.ai_car.controller.current_action
+
+        normal_col = (150, 150, 150)
+        action_col = (255, 255, 255)
+
+        pygame.draw.rect(screen, action_col if action == 1 else normal_col, down_rect)
+        pygame.draw.rect(screen, action_col if action == 2 else normal_col, up_rect)
+        pygame.draw.rect(screen, action_col if action == 3 else normal_col, left_rect)
+        pygame.draw.rect(screen, action_col if action == 4 else normal_col, right_rect)

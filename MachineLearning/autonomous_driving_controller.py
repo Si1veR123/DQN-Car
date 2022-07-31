@@ -21,6 +21,8 @@ class AutonomousDrivingController(CarControllerKinematic):
 
         self.distance_travelled = 0
 
+        self.current_action = 0
+
         self.ai_dead = False
 
     def end_of_episode(self):
@@ -65,16 +67,19 @@ class AutonomousDrivingController(CarControllerKinematic):
 
         elif action == 0:
             self.steering_angle = 0
+            self.current_action = 0
 
         elif action == 1:
             #self.steering_angle += self.steer_amount
             #self.steering_angle = min(self.max_steering, self.steering_angle)
             self.steering_angle = self.max_steering
+            self.current_action = 3
 
         elif action == 2:
             #self.steering_angle -= self.steer_amount
             #self.steering_angle = max(-self.max_steering, self.steering_angle)
             self.steering_angle = -self.max_steering
+            self.current_action = 4
 
         super().update_transform(velocity_constant)
 
