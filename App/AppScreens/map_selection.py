@@ -56,7 +56,7 @@ def get_new_maps(pre_loaded_maps):
 
 def run_map_selection(screen: pygame.Surface):
     editor_image = pygame.image.load("image_assets/editor_box.png")
-    editor_image = pygame.transform.scale(editor_image, (324, 182))
+    editor_image = pygame.transform.scale(editor_image, (X_SIZE, Y_SIZE))
 
     loaded_maps_dict = get_new_maps([])
     loaded_names = list(loaded_maps_dict.keys())
@@ -84,7 +84,9 @@ def run_map_selection(screen: pygame.Surface):
         if pygame.mouse.get_pressed()[0]:
             mouse_pos = pygame.mouse.get_pos()
             grid_pos = get_selected_map(mouse_pos)
+
             if grid_pos is not None:
+
                 index = grid_pos[0] + WIDTH*grid_pos[1]
                 if index == 0:
                     created_map, saved = run_map_builder(screen)
@@ -99,15 +101,26 @@ def run_map_selection(screen: pygame.Surface):
                     loaded_maps = loaded_maps + new_loaded_maps
 
                 else:
-                    return list(map(lambda x: x[0], loaded_maps))[index-1]  # first is map creator so -1
+                    try:
+                        return list(map(lambda x: x[0], loaded_maps))[index-1]  # first is map creator so -1
+                    except IndexError:
+                        pass
+
         elif pygame.mouse.get_pressed()[2]:
             mouse_pos = pygame.mouse.get_pos()
             grid_pos = get_selected_map(mouse_pos)
             if grid_pos is not None:
                 index = grid_pos[0] + WIDTH*grid_pos[1]
-                if index == 0:
-                    break
-                index -= 1
+                if index != 0:
+                    index -= 1
 
+                    try:
+                        map_name = loaded_names[index]
+                    except IndexError:
+                        map_name = None
+                    if map_name is not None and input("Delete map? (y/n):") == "y":
+                        Map.delete_map(map_name)
+                        del loaded_names[index]
+                        del loaded_maps[index]
 
         pygame.display.update()

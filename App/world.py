@@ -69,6 +69,13 @@ class Map:
 
         return map, image
 
+    @classmethod
+    def delete_map(cls, name):
+        path = gs.SAVED_MAPS_ROOT + name
+        os.remove(path)
+        os.remove(path + ".png")
+        print("DELETED:", name)
+
 
 class World:
     """
