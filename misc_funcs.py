@@ -38,3 +38,9 @@ def cut_matrix(matrix, start, end):
         new_matrix.append(row)
 
     return new_matrix
+
+
+def color_lerp(color1, color2, alpha):
+    color1 = np.array(color1)
+    color2 = np.array(color2)
+    return alpha*(color2-color1)+color1

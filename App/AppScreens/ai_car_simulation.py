@@ -28,7 +28,8 @@ def run_ai_car_simulation(screen, world: World):
 
     # dont show collision by default
     view_filters.FILTERS.append(view_filters.NoCollision())
-    # view_filters.FILTERS.append(view_filters.AiVisOnly(True))
+    # view_filters.FILTERS.append(view_filters.NoQTargetChange())
+    view_filters.FILTERS.append(view_filters.FastTrainingView(False))
 
     clock = pygame.time.Clock()
     run = True
@@ -52,14 +53,19 @@ def run_ai_car_simulation(screen, world: World):
         # Trace all rays for ai car, which updates the Q learning state
         world.ai_car.trace_all_rays(world, screen)
 
-        # Check if crashed
-        world.car_collision()
-
         # Move all cars
         world.update_cars(gs.VELOCITY_CONSTANT)
 
+        # Check if crashed
+        world.car_collision()
+
+        # AI controller has things to do after moving and checking collision
+        world.ai_car.controller.end_of_frame()
+
         # Draw all cars to screen
         world.blit_cars(screen)
+
+        world.visualise_q_target_changes(screen)
 
         world.blit_ai_action(screen)
 

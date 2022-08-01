@@ -9,6 +9,8 @@ ai_ray_collisions
 grid
 
 collision
+
+q_target_change
 """
 
 FILTERS = []
@@ -55,3 +57,17 @@ class AiVisOnly(AllowedFilter):
         self.allowed = ["ai_ray_collisions", "car"]
         if rays:
             self.allowed.append("ai_rays")
+
+
+class FastTrainingView(AllowedFilter):
+    """
+    Allows faster training by not drawing entire grid
+    """
+    def __init__(self, q_target_change=True):
+        self.allowed = ["ai_rays", "car"]
+        if q_target_change:
+            self.allowed.append("q_target_change")
+
+
+class NoQTargetChange(BlockedFilter):
+    blocked = ["q_target_change"]

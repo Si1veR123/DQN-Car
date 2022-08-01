@@ -62,6 +62,7 @@ class QLearning:
         self.train_amount = 0.7  # fraction of experiences to train on
 
         self.reward_cache = []
+        self.q_target_error_cache = {}  # map index of experience to q_target error
 
     def create_network(self):
         raise NotImplementedError
@@ -102,23 +103,24 @@ class QLearning:
         raise NotImplementedError
 
     def train(self):
+        self.q_target_error_cache = {}
         if len(self.experience_buffer):
             print("============================================")
             # number of experiences to train on
             training_experiences_count = int(len(self.experience_buffer) * self.train_amount) - 1
             # seample indicies (in experience buffer) of experiences to train on, randomly
-            experiences_indicies = random.sample(range(len(self.experience_buffer) - 1), training_experiences_count)
+            experiences_indices = random.sample(range(len(self.experience_buffer) - 1), training_experiences_count)
 
-            for experience_num in experiences_indicies:
+            for experience_num in experiences_indices:
                 # experience: (state, action, reward)
                 experience = self.experience_buffer[experience_num]
                 next_experience = self.experience_buffer[experience_num + 1]
 
                 state = experience[0]
                 action = experience[1]
-                # get reward in next experience, as this is the
-                # reward gained from taking the action in current experience
-                reward = next_experience[2]
+
+                # reward gained from taking the action
+                reward = experience[2]
 
                 max_next_q_value = max(self.get_q_values(next_experience[0], target=True))
 
@@ -127,7 +129,12 @@ class QLearning:
 
                 # correct q values
                 correct_q_values = self.get_q_values(state)
-                print("Q VALUES", correct_q_values)
+
+                if self.frame_num % 10 == 0:
+                    # dont print all Q values, only about 1/10 to reduce printed text
+                    print("Q VALUES", correct_q_values)
+
+                self.q_target_error_cache[experience_num] = q_target - correct_q_values[action]
 
                 # if predicted Q values were (0.1, 0.2, 0.3)
                 # and action [1] was taken
@@ -166,6 +173,7 @@ class QLearning:
 """
 ======= Individual Neural Network types =======
 """
+
 
 class CustomModelQLearning(QLearning):
     """
@@ -206,7 +214,7 @@ class KerasModelQLearning(QLearning):
             Input(shape=(self.state_n,)),
             Dense(12, activation="relu"),
             Dense(18, activation="relu"),
-            Dense(9, activation="relu"),
+            Dense(12, activation="relu"),
             Dense(self.actions_n, activation="relu")
         ])
 
