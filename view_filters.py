@@ -63,11 +63,5 @@ class FastTrainingView(AllowedFilter):
     """
     Allows faster training by not drawing entire grid
     """
-    def __init__(self, q_target_change=True):
+    def __init__(self):
         self.allowed = ["ai_rays", "car"]
-        if q_target_change:
-            self.allowed.append("q_target_change")
-
-
-class NoQTargetChange(BlockedFilter):
-    blocked = ["q_target_change"]

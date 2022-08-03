@@ -1,4 +1,4 @@
-import pygame
+import pygame, time
 pygame.init()
 
 from App.world import World
@@ -26,5 +26,8 @@ world.replicate_map_spawn()
 # ================================================ GAME LOOP ===========================================================
 run_ai_car_simulation(screen, world)
 
-world.ai_car.controller.q_learning.reward_graph()
-world.ai_car.controller.q_learning.save_model()
+world.ai_car.controller.gas_q_learning.reward_graph()
+world.ai_car.controller.steer_q_learning.reward_graph()
+world.ai_car.controller.gas_q_learning.save_model("gas")
+time.sleep(60)
+world.ai_car.controller.steer_q_learning.save_model("steer")

@@ -29,7 +29,8 @@ def run_ai_car_simulation(screen, world: World):
     # dont show collision by default
     view_filters.FILTERS.append(view_filters.NoCollision())
     # view_filters.FILTERS.append(view_filters.NoQTargetChange())
-    view_filters.FILTERS.append(view_filters.FastTrainingView(False))
+    if gs.TRAINING:
+        view_filters.FILTERS.append(view_filters.FastTrainingView())
 
     clock = pygame.time.Clock()
     run = True
@@ -64,8 +65,6 @@ def run_ai_car_simulation(screen, world: World):
 
         # Draw all cars to screen
         world.blit_cars(screen)
-
-        world.visualise_q_target_changes(screen)
 
         world.blit_ai_action(screen)
 
