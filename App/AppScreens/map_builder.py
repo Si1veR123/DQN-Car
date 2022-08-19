@@ -28,9 +28,8 @@ def run_map_builder(screen) -> Tuple[Map, bool]:
         # total game time in seconds
         game_time = pygame.time.get_ticks() / 1000
 
-        # limit fps if given
-        if fps is not None:
-            clock.tick(fps)
+        # limit fps
+        clock.tick(fps)
 
         # move on from drawing if quit window
         for event in pygame.event.get():

@@ -27,7 +27,7 @@ class NeuralNetwork:
         else:
             return np.mean(np.power((predicted - expected), 2))
 
-    def predict(self, x) -> np.ndarray:
+    def predict(self, x):
         values = np.array([x])
 
         if len(values.shape) >= 4:
@@ -38,6 +38,7 @@ class NeuralNetwork:
                 for layer in self.layers:
                     running_value = layer.forward(running_value)
                 predictions.append(running_value)
+            return predictions
 
         else:
             for layer in self.layers:

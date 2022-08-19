@@ -45,17 +45,20 @@ class CarControllerKinematic(CarController):
         self.velocity = 0  # distance per frame, scaled by VELOCITY CONSTANT
         self.acceleration = 0
 
-        self.wheel_distance = 13 * (gs.GRID_SIZE_PIXELS/60)
+        self.wheel_distance = 1 * (gs.GRID_SIZE_PIXELS/60)
 
     def update_transform(self, velocity_constant):
+        # not really mathematically correct but works for its purpose
+        # higher velocities turn less
+
         # if steering angle is 0, dont calculate as sin(0)=0
         if self.steering_angle:
             radius = self.wheel_distance / np.sin(self.steering_angle * np.pi / 180)  # radius of steering circle
         else:
-            radius = 9999999999999999  # big number to simulate infinity
+            radius = 99999999999999999
 
-        angular_change = (self.velocity*velocity_constant*8) / radius  # 8 changes steering intensity
-        self.rotation += angular_change
+        if self.velocity:
+            self.rotation += 1/radius
 
         # move forward by the velocity rotated clockwise by rotation
         self.location += rotate_vector_acw(np.array((0, self.velocity * velocity_constant)), -self.rotation)
@@ -68,13 +71,17 @@ class PlayerController(CarControllerKinematic):
     Controls the car by arrow keys
     """
     def update_transform(self, velocity_constant):
+        print(self.velocity)
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_UP]:
-            self.velocity = 10
+            self.acceleration = 0.1
         elif keys[pygame.K_DOWN]:
-            self.velocity = -10
-        elif keys[pygame.K_RIGHT]:
+            self.acceleration = -0.1
+        else:
+            self.acceleration = 0
+
+        if keys[pygame.K_RIGHT]:
             self.steering_angle = -80
         elif keys[pygame.K_LEFT]:
             self.steering_angle = 80

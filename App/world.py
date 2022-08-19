@@ -160,6 +160,8 @@ class World:
         """
         Check every car's collision, and if it has crashed, by checking if corners overlap roads
         """
+        if gs.FREE_ROAM:
+            return
         for car in self.all_cars:
             overlaps = []
             corners = car.get_corners()
@@ -195,30 +197,7 @@ class World:
         normal_col = (150, 150, 150)
         action_col = (255, 255, 255)
 
-        pygame.draw.rect(screen, action_col if action == 3 else normal_col, down_rect)
-        pygame.draw.rect(screen, action_col if action == 4 else normal_col, up_rect)
-        pygame.draw.rect(screen, action_col if action == 1 else normal_col, left_rect)
-        pygame.draw.rect(screen, action_col if action == 2 else normal_col, right_rect)
-
-    def visualise_q_target_changes(self, screen):
-        if view_filters.can_show_type("q_target_change"):
-            locations = self.ai_car.controller.previous_ep_location_cache
-            q_value_changes = self.ai_car.controller.q_learning.q_target_error_cache
-
-            if not len(q_value_changes):
-                return
-
-            values = list(q_value_changes.values())
-
-            # values to color lerp between
-            mini = np.quantile(np.array(values), 0.15)
-            maxi = np.quantile(np.array(values), 0.85)
-
-            for experience_num in q_value_changes.keys():
-                loc = locations[experience_num]
-                q_target_change = q_value_changes[experience_num]
-
-                alpha = (q_target_change-mini) / (maxi-mini)
-                alpha = max(min(1, alpha), 0)
-                color = color_lerp((0, 255, 0), (255, 0, 0), alpha)
-                pygame.draw.circle(screen, color, loc, 4)
+        pygame.draw.rect(screen, action_col if action[1] == 1 else normal_col, down_rect)
+        pygame.draw.rect(screen, action_col if action[1] == 2 else normal_col, up_rect)
+        pygame.draw.rect(screen, action_col if action[0] == 1 else normal_col, left_rect)
+        pygame.draw.rect(screen, action_col if action[0] == 2 else normal_col, right_rect)

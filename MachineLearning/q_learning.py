@@ -1,19 +1,6 @@
 from MachineLearning.neural_network_classes import NeuralNetwork, ConnectedLayer
 from MachineLearning.activation_functions import relu, linear, tanh, sigmoid, softmax, leaky_relu
 
-import os
-# no gpu as it made it slower
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-
-from keras.models import Sequential
-from keras.layers import Dense
-from keras import Input
-from keras.optimizers import Adam
-import keras
-
-from tensorflow.python.ops.numpy_ops import np_config
-np_config.enable_numpy_behavior()
-
 import numpy as np
 import random
 import datetime
@@ -33,24 +20,26 @@ class QLearning:
         target networks
         save/load
     """
-    def __init__(self, state_n, actions_n):
+    def __init__(self, state_n, actions_n, load=None, model_type=""):
         self.state_n = state_n
         self.actions_n = actions_n
 
         # number of frames since start
         self.frame_num = 0
 
+        settings = gs.get_q_learning_settings(model_type)
+
         # hyperparameters copied from global settings
-        self.learning_rate = gs.LEARNING_RATE
-        self.discount_rate = gs.DISCOUNT_RATE
-        self.exploration_probability = gs.EXPLORATION_PROBABILITY
-        self.exploration_decay = gs.EXPLORATION_DECAY
-        self.network_copy_steps = gs.TARGET_NET_COPY_STEPS
+        self.learning_rate = settings["LEARNING_RATE"]
+        self.discount_rate = settings["DISCOUNT_RATE"]
+        self.exploration_probability = settings["EXPLORATION_PROBABILITY"] if settings["TRAINING"] else 0
+        self.exploration_decay = settings["EXPLORATION_DECAY"]
+        self.network_copy_steps = settings["TARGET_NET_COPY_STEPS"]
 
         # load model if needed, or create a new one
-        if gs.LOAD_MODEL:
-            self.network = self.load_model(gs.LOAD_MODEL)
-            print("LOADED: ", gs.LOAD_MODEL)
+        if load is not None:
+            self.network = self.load_model(load)
+            print("LOADED: ", load)
         else:
             self.network = self.create_network()
 
@@ -62,7 +51,6 @@ class QLearning:
         self.train_amount = 0.7  # fraction of experiences to train on
 
         self.reward_cache = []
-        self.q_target_error_cache = {}  # map index of experience to q_target error
 
     def create_network(self):
         raise NotImplementedError
@@ -103,18 +91,21 @@ class QLearning:
         raise NotImplementedError
 
     def train(self):
-        self.q_target_error_cache = {}
         if len(self.experience_buffer):
             print("============================================")
             # number of experiences to train on
             training_experiences_count = int(len(self.experience_buffer) * self.train_amount) - 1
             # seample indicies (in experience buffer) of experiences to train on, randomly
-            experiences_indices = random.sample(range(len(self.experience_buffer) - 1), training_experiences_count)
+            experiences_indices = random.sample(range(len(self.experience_buffer)), training_experiences_count)
 
             for experience_num in experiences_indices:
                 # experience: (state, action, reward)
                 experience = self.experience_buffer[experience_num]
-                next_experience = self.experience_buffer[experience_num + 1]
+
+                try:
+                    next_experience = self.experience_buffer[experience_num + 1]
+                except IndexError:
+                    next_experience = None
 
                 state = experience[0]
                 action = experience[1]
@@ -122,7 +113,10 @@ class QLearning:
                 # reward gained from taking the action
                 reward = experience[2]
 
-                max_next_q_value = max(self.get_q_values(next_experience[0], target=True))
+                if next_experience is not None:
+                    max_next_q_value = max(self.get_q_values(next_experience[0], target=True))
+                else:
+                    max_next_q_value = 0
 
                 # bellman optimal equation
                 q_target = reward + (self.discount_rate * max_next_q_value)
@@ -133,8 +127,6 @@ class QLearning:
                 if self.frame_num % 10 == 0:
                     # dont print all Q values, only about 1/10 to reduce printed text
                     print("Q VALUES", correct_q_values)
-
-                self.q_target_error_cache[experience_num] = q_target - correct_q_values[action]
 
                 # if predicted Q values were (0.1, 0.2, 0.3)
                 # and action [1] was taken
@@ -162,7 +154,7 @@ class QLearning:
         pyplot.plot(self.reward_cache)
         pyplot.show()
 
-    def save_model(self):
+    def save_model(self, type):
         raise NotImplementedError
 
     @classmethod
@@ -184,8 +176,8 @@ class CustomModelQLearning(QLearning):
             [
                 ConnectedLayer(relu, self.state_n, 12),
                 ConnectedLayer(relu, 12, 18),
-                ConnectedLayer(relu, 18, 9),
-                ConnectedLayer(linear, 9, self.actions_n)
+                ConnectedLayer(relu, 18, 12),
+                ConnectedLayer(linear, 12, self.actions_n)
             ], learning_rate=self.learning_rate)
 
     def get_q_values(self, state, target=False):
@@ -195,45 +187,11 @@ class CustomModelQLearning(QLearning):
     def fit(self, state, correct_q_values):
         self.network.train([state], [correct_q_values], epochs=1, log=False)
 
-    def save_model(self):
+    def save_model(self, type):
         # time and average of rewards
-        name = gs.SAVED_MODELS_ROOT + "custom_model_" + datetime.datetime.now().strftime("%d.%m;%H.%M") + "_" + str(int(sum(self.reward_cache) / len(self.reward_cache)))
+        name = gs.SAVED_MODELS_ROOT + type + "_model_" + datetime.datetime.now().strftime("%d.%m;%H.%M") + "_" + str(int(sum(self.reward_cache) / len(self.reward_cache)))
         self.network.save_to_file(name)
 
     @classmethod
     def load_model(cls, name):
         return NeuralNetwork.load_from_file(gs.SAVED_MODELS_ROOT + name)
-
-
-class KerasModelQLearning(QLearning):
-    """
-    Uses Keras Sequential model as Neural Network in Deep Q Learning
-    """
-    def create_network(self):
-        network = Sequential([
-            Input(shape=(self.state_n,)),
-            Dense(12, activation="relu"),
-            Dense(18, activation="relu"),
-            Dense(12, activation="relu"),
-            Dense(self.actions_n, activation="relu")
-        ])
-
-        network.compile(loss="mse", optimizer=Adam(learning_rate=self.learning_rate), metrics=["accuracy"])
-        return network
-
-    def get_q_values(self, state, target=False):
-        net = self.target_network if target else self.network
-        return net(np.array([state]))[0].tolist()
-
-    def fit(self, state, correct_q_values):
-        self.network.fit(np.array([state]), np.array([correct_q_values]))
-
-    def save_model(self):
-        # time and average of rewards
-        name = gs.SAVED_MODELS_ROOT + "keras_model_" + datetime.datetime.now().strftime("%d.%m;%H.%M") + "_" + str(int(sum(self.reward_cache)/len(self.reward_cache)))
-
-        self.network.save(name, include_optimizer=True)
-
-    @classmethod
-    def load_model(cls, path):
-        return keras.models.load_model(gs.SAVED_MODELS_ROOT + path)

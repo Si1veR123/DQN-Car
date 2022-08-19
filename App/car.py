@@ -74,7 +74,7 @@ class AICar(Car):
         self.ray_distance = 300
         self.ray_check_frequency = 5
 
-        super().__init__(car_name, AutonomousDrivingController(self.ray_count))
+        super().__init__(car_name, AutonomousDrivingController(self.ray_count+1))
 
         self.ray_offset = np.array((0, self.controller.wheel_distance * .7))
 
@@ -98,6 +98,7 @@ class AICar(Car):
 
             # trace this ray for collisions, then set as state for AI
             self.controller.state[ray_number] = self.ray_trace(ray_start, ray_end, world, screen)
+        self.controller.state[self.ray_count] = self.controller.velocity
 
     def ray_trace(self, start, end, world, screen=None):
         # start and end are numpy arrays, 2 length

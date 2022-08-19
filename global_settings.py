@@ -1,17 +1,21 @@
-SAVED_MAPS_ROOT = r"E:/EPQ/PythonAI/saved_maps/"
-SAVED_MODELS_ROOT = r"E:/EPQ/PythonAI/saved_models/"
+SAVED_MAPS_ROOT = r"saved_maps/"
+SAVED_MODELS_ROOT = r"saved_models/"
 
-FPS = None
+FPS = 0  # 0 for unlimited
 PORT = 5656
-GRID_SIZE_PIXELS = 60
+GRID_SIZE_PIXELS = 60  # 30 for low res
 
-HEIGHT = 1081
-WIDTH = 1921
+HEIGHT = 1081  # 541 for low res
+WIDTH = 1921  # 961 for low res
 
 USE_UNREAL_SOCKET = False
 MESSAGE_LENGTH = 50  # padded to this length with @
 
-VELOCITY_CONSTANT = .4
+VELOCITY_CONSTANT = 1
+
+FREE_ROAM = False  # no collision
+
+MAX_EPISODE_FRAMES = 6000
 
 # COLOURS
 COL_BACKGROUND = (97, 139, 74)
@@ -20,12 +24,49 @@ COL_MOUSE_HIGHLIGHT = (109, 163, 77)
 COL_PLACED_ROAD = (84, 86, 86)
 
 # Q Learning
-LOAD_MODEL = r"5action_custom_model_01.08;22.14_158"
+LOAD_MODEL_STEER = "steer_model_17.08;17.26_898"
+LOAD_MODEL_GAS = None
 
-TRAINING = True
+Q_LEARNING_SETTINGS = {
+    "TRAINING_STEER": True,
+    "TRAINING_GAS": False,
 
-LEARNING_RATE = 0.001
-DISCOUNT_RATE = 0.95
-EXPLORATION_PROBABILITY = 0.1
-EXPLORATION_DECAY = 0.00005
-TARGET_NET_COPY_STEPS = 5000
+    "LEARNING_RATE": 0.00001,
+
+    "DISCOUNT_RATE": 0.95,
+
+    "EXPLORATION_PROBABILITY": 0.5,
+
+    "EXPLORATION_DECAY_STEER": 0.0005,
+    "EXPLORATION_DECAY_GAS": 0.00003,
+
+    "TARGET_NET_COPY_STEPS": 5000,
+}
+
+
+# MORE SETTINGS CODE
+
+# if any training settings are True, program is training a model
+TRAINING = any([val for setting, val in Q_LEARNING_SETTINGS.items() if setting.startswith("TRAINING")])
+
+
+def get_q_learning_settings(suffix: str):
+    """
+    Given a suffix e.g. STEER, returns all settings for that Q Learning model
+    If setting doesn't end in STEER or other suffix, it is assumed to be used for all suffixes
+    """
+    settings = {}
+    suffix = "_" + suffix.upper()
+
+    for setting in Q_LEARNING_SETTINGS.keys():
+        # settings ending in suffix
+        if setting.endswith(suffix):
+            settings[setting.replace(suffix, "")] = Q_LEARNING_SETTINGS[setting]
+
+    for setting in Q_LEARNING_SETTINGS.keys():
+        # settings that dont end in any suffix
+        setting_root = "_".join(setting.split("_")[:-1])
+        if setting_root not in settings.keys():
+            settings[setting] = Q_LEARNING_SETTINGS[setting]
+
+    return settings

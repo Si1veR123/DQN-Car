@@ -24,20 +24,24 @@ def collision_filter(screen, world):
 def run_ai_car_simulation(screen, world: World):
     world.initiate_cars()
 
+    default_font = pygame.font.Font(pygame.font.get_default_font(), 24)
+
     fps = gs.FPS
+
+    episode_frames = 0
 
     # dont show collision by default
     view_filters.FILTERS.append(view_filters.NoCollision())
-    # view_filters.FILTERS.append(view_filters.NoQTargetChange())
-    view_filters.FILTERS.append(view_filters.FastTrainingView(False))
+
+    if gs.TRAINING:
+        view_filters.FILTERS.append(view_filters.FastTrainingView())
 
     clock = pygame.time.Clock()
     run = True
     while run:
         # game time in seconds
         game_time = pygame.time.get_ticks() / 1000
-        if fps is not None:
-            clock.tick(fps)
+        clock.tick(fps)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -65,14 +69,20 @@ def run_ai_car_simulation(screen, world: World):
         # Draw all cars to screen
         world.blit_cars(screen)
 
-        world.visualise_q_target_changes(screen)
-
         world.blit_ai_action(screen)
 
         # If AI car has crashed, reset all cars
-        if world.ai_car.controller.ai_dead:
+        if world.ai_car.controller.ai_dead or (episode_frames >= gs.MAX_EPISODE_FRAMES and gs.TRAINING):
             world.initiate_cars()
+            episode_frames = 0
 
+        fps_text = default_font.render(str(int(clock.get_fps())), False, (255, 255, 255))
+        screen.blit(fps_text, (0, 0))
+
+        speed_text = default_font.render(str(round(world.ai_car.controller.velocity, 2)), False, (255, 255, 255))
+        screen.blit(speed_text, (200, 0))
+
+        episode_frames += 1
         pygame.display.update()
 
     view_filters.FILTERS.clear()
