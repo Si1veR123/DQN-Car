@@ -4,10 +4,11 @@ import global_settings as gs
 from App.world import Map
 from App.AppScreens.map_builder import run_map_builder
 
-X_GAP = 50
-Y_GAP = 133.5
-X_SIZE = 324
-Y_SIZE = 182
+# scale sizes
+X_GAP = 50*gs.SF
+Y_GAP = 133.5*gs.SF
+X_SIZE = 324*gs.SF
+Y_SIZE = 182*gs.SF
 
 WIDTH = 5
 

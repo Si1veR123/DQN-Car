@@ -127,6 +127,9 @@ class QLearning:
                 if self.frame_num % 10 == 0:
                     # dont print all Q values, only about 1/10 to reduce printed text
                     print("Q VALUES", correct_q_values)
+                if experience_num == len(self.experience_buffer)-1:
+                    # also print final Q values as it can be useful
+                    print("Q VALUES FINAL", correct_q_values)
 
                 # if predicted Q values were (0.1, 0.2, 0.3)
                 # and action [1] was taken
@@ -149,6 +152,10 @@ class QLearning:
             self.reward_cache.append(sum(map(lambda x: x[2], self.experience_buffer)))
 
             self.experience_buffer = []
+
+            # a method of troubleshooting by predicting a state of 8, 8, ... to see how large changes are
+            test_q_values = self.get_q_values([8]*self.state_n)
+            print("TEST Q VALUES", test_q_values)
 
     def reward_graph(self):
         pyplot.plot(self.reward_cache)
@@ -176,6 +183,7 @@ class CustomModelQLearning(QLearning):
             [
                 ConnectedLayer(relu, self.state_n, 12),
                 ConnectedLayer(relu, 12, 18),
+                ConnectedLayer(relu, 18, 18),
                 ConnectedLayer(relu, 18, 12),
                 ConnectedLayer(linear, 12, self.actions_n)
             ], learning_rate=self.learning_rate)

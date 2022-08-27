@@ -71,8 +71,8 @@ class AICar(Car):
     def __init__(self, car_name):
         self.ray_angle_range = 80
         self.ray_count = 9
-        self.ray_distance = 300
-        self.ray_check_frequency = 5
+        self.ray_distance = 300 * gs.SF
+        self.ray_check_frequency = 5 * gs.SF
 
         super().__init__(car_name, AutonomousDrivingController(self.ray_count+1))
 
@@ -97,7 +97,7 @@ class AICar(Car):
             ray_end = ray_start + rotate_vector_acw((0, self.ray_distance), -ray_angle)
 
             # trace this ray for collisions, then set as state for AI
-            self.controller.state[ray_number] = self.ray_trace(ray_start, ray_end, world, screen)
+            self.controller.state[ray_number] = self.ray_trace(ray_start, ray_end, world, screen)*(1/gs.SF)  # state is as if no scaling is applied, so reverse scaling
         self.controller.state[self.ray_count] = self.controller.velocity
 
     def ray_trace(self, start, end, world, screen=None):
@@ -108,7 +108,7 @@ class AICar(Car):
         # initiate length to maximum
         length = self.ray_distance
 
-        for f in range(self.ray_distance//self.ray_check_frequency):
+        for f in range(int(self.ray_distance//self.ray_check_frequency)):
             # iterate over equal distances along the ray
             # this is the point currently testing
             ray_point = start + ((end - start)/self.ray_distance * (f * self.ray_check_frequency))

@@ -18,7 +18,7 @@ class AutonomousDrivingController(CarControllerKinematic):
 
         self.max_velocity = 6
         self.max_steering = 80
-        self.start_velocity = 1.5
+        self.start_velocity = 3
 
         self.distance_travelled = 0
 
@@ -82,14 +82,14 @@ class AutonomousDrivingController(CarControllerKinematic):
             self.current_action[1] = 0
 
         elif gas_action == 1:
-            # self.velocity -= self.brake_amount
+            self.velocity -= self.brake_amount
 
             if self.velocity < 0:
                 self.velocity = 0
             self.current_action[1] = 1
 
         elif gas_action == 2:
-            # self.velocity += self.accelerate_amount
+            self.velocity += self.accelerate_amount
 
             if self.velocity > self.max_velocity:
                 self.velocity = self.max_velocity
@@ -108,18 +108,21 @@ class AutonomousDrivingController(CarControllerKinematic):
             self.steer_q_learning.update_experience_buffer(self.state, self.current_action[0], s_reward)
 
     def evaluate_reward(self, gas):
-        if self.ai_dead:
-            return -10
         if gas:
+            if self.ai_dead:
+                return -5
             if self.current_action[1] == 0:
                 # nothing
                 return 1
             if self.current_action[1] == 1:
                 # brake
-                return 0.8
+                return 0.7
             if self.current_action[1] == 2:
                 # accelerate
-                return 1.2
+                return 1.3
         else:
             # steering left or right
+            if self.ai_dead:
+                return -10
+
             return 1
