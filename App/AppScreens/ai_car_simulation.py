@@ -73,6 +73,7 @@ def run_ai_car_simulation(screen, world: World):
 
         # If AI car has crashed, reset all cars
         if world.ai_car.controller.ai_dead or (episode_frames >= gs.MAX_EPISODE_FRAMES and gs.TRAINING):
+
             world.initiate_cars()
             episode_frames = 0
 

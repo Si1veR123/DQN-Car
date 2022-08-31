@@ -15,7 +15,6 @@ from App.AppScreens.map_selection import run_map_selection
 
 import global_settings as gs
 
-from App.car import PlayerCar
 # Create Window
 screen = pygame.display.set_mode((gs.WIDTH, gs.HEIGHT))
 
@@ -25,8 +24,8 @@ selected_map = run_map_selection(screen)
 
 # ================================================= MAP BUILDER ========================================================
 
-world = World(socket, selected_map)
 
+world = World(socket, selected_map)
 world.replicate_map_spawn()
 
 # ================================================ GAME LOOP ===========================================================

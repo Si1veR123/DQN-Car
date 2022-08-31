@@ -1,5 +1,5 @@
 from SocketCommunication.replicate import ReplicatedTransform
-from MachineLearning.autonomous_driving_controller import AutonomousDrivingController
+from MachineLearning.autonomous_driving_controller import AutonomousDrivingControllerSeparate, AutonomousDrivingControllerCombined
 from App.car_controller import PlayerController
 from misc_funcs import rotate_vector_acw
 from App.placeable import Placeable
@@ -74,7 +74,7 @@ class AICar(Car):
         self.ray_distance = 300 * gs.SF
         self.ray_check_frequency = 5 * gs.SF
 
-        super().__init__(car_name, AutonomousDrivingController(self.ray_count+1))
+        super().__init__(car_name, AutonomousDrivingControllerCombined(self.ray_count + 1))
 
         self.ray_offset = np.array((0, self.controller.wheel_distance * .7))
 

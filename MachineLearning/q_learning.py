@@ -5,13 +5,14 @@ import numpy as np
 import random
 import datetime
 import copy
+import json
 
 from matplotlib import pyplot
 
 import global_settings as gs
 
 
-class QLearning:
+class DeepQLearning:
     """
     Deep Q Learning Class
     Child classes implement the neural network
@@ -153,8 +154,8 @@ class QLearning:
 
             self.experience_buffer = []
 
-            # a method of troubleshooting by predicting a state of 8, 8, ... to see how large changes are
-            test_q_values = self.get_q_values([8]*self.state_n)
+            # a method of troubleshooting by predicting a state to see how large changes are
+            test_q_values = self.get_q_values([30, 35, 43, 55, 300, 55, 43, 35, 30, 3])
             print("TEST Q VALUES", test_q_values)
 
     def reward_graph(self):
@@ -163,6 +164,12 @@ class QLearning:
 
     def save_model(self, type):
         raise NotImplementedError
+
+    def _save_settings(self, path: str):
+        # path is the file path and name of saved model
+        path += "_settings.txt"
+        with open(path, "w") as file:
+            file.write(json.dumps(gs.Q_LEARNING_SETTINGS, separators=(", ", ":")).replace(" ", "\n"))
 
     @classmethod
     def load_model(cls, path):
@@ -174,16 +181,21 @@ class QLearning:
 """
 
 
-class CustomModelQLearning(QLearning):
+class CustomModelQLearning(DeepQLearning):
     """
     Uses Custom model as Neural Network in Deep Q Learning
     """
     def create_network(self):
         return NeuralNetwork(
             [
-                ConnectedLayer(relu, self.state_n, 12),
-                ConnectedLayer(relu, 12, 18),
-                ConnectedLayer(relu, 18, 18),
+                ConnectedLayer(relu, self.state_n, 18),
+                ConnectedLayer(relu, 18, 36),
+                ConnectedLayer(relu, 36, 52),
+                ConnectedLayer(relu, 52, 72),
+                ConnectedLayer(relu, 72, 72),
+                ConnectedLayer(relu, 72, 52),
+                ConnectedLayer(relu, 52, 36),
+                ConnectedLayer(relu, 36, 18),
                 ConnectedLayer(relu, 18, 12),
                 ConnectedLayer(linear, 12, self.actions_n)
             ], learning_rate=self.learning_rate)
@@ -199,6 +211,7 @@ class CustomModelQLearning(QLearning):
         # time and average of rewards
         name = gs.SAVED_MODELS_ROOT + type + "_model_" + datetime.datetime.now().strftime("%d.%m;%H.%M") + "_" + str(int(sum(self.reward_cache) / len(self.reward_cache)))
         self.network.save_to_file(name)
+        self._save_settings(name)
 
     @classmethod
     def load_model(cls, name):

@@ -197,7 +197,7 @@ class World:
         normal_col = (150, 150, 150)
         action_col = (255, 255, 255)
 
-        pygame.draw.rect(screen, action_col if action[1] == 1 else normal_col, down_rect)
-        pygame.draw.rect(screen, action_col if action[1] == 2 else normal_col, up_rect)
-        pygame.draw.rect(screen, action_col if action[0] == 1 else normal_col, left_rect)
-        pygame.draw.rect(screen, action_col if action[0] == 2 else normal_col, right_rect)
+        pygame.draw.rect(screen, action_col if action == 3 else normal_col, down_rect)
+        pygame.draw.rect(screen, action_col if action == 4 else normal_col, up_rect)
+        pygame.draw.rect(screen, action_col if action == 1 else normal_col, left_rect)
+        pygame.draw.rect(screen, action_col if action == 2 else normal_col, right_rect)
