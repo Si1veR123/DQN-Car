@@ -38,12 +38,21 @@ class DeepQLearning:
         self.network_copy_steps = settings["TARGET_NET_COPY_STEPS"]
         self.gd_momentum = settings["GD_MOMENTUM"]
 
+        gd = GradientDescent if self.gd_momentum is None else MomentumGradientDescent
+
         # load model if needed, or create a new one
         if load is not None:
-            self.network = self.load_model(load)
+            self.network: NeuralNetwork = self.load_model(load)
+            # update net with new LR
+            self.network.learning_rate = self.learning_rate
+            # update net with new gradient descent algorithm
+            for l in self.network.layers:
+                l.set_gradient_descent(gd, momentum=self.gd_momentum)
+
             print("LOADED: ", load)
         else:
-            self.network = self.create_network()
+            net_kwargs = {"gradient_descent": gd, "gd_momentum": self.gd_momentum}
+            self.network = self.create_network(**net_kwargs)
 
         # target network is a copy of the normal network, with static weights + bias
         self.target_network = copy.deepcopy(self.network)
@@ -56,7 +65,7 @@ class DeepQLearning:
         self.reward_cache = []
         self.error_cache = []
 
-    def create_network(self):
+    def create_network(self, **kwargs):
         raise NotImplementedError
 
     def decay_exploration_probability(self):
@@ -196,8 +205,7 @@ class CustomModelQLearning(DeepQLearning):
     """
     Uses Custom model as Neural Network in Deep Q Learning
     """
-    def create_network(self):
-        gd = GradientDescent if self.gd_momentum is None else MomentumGradientDescent
+    def create_network(self, **kwargs):
         return NeuralNetwork(
             [
                 ConnectedLayer(relu, self.state_n, 24),
@@ -209,7 +217,7 @@ class CustomModelQLearning(DeepQLearning):
                 ConnectedLayer(relu, 84, 48),
                 ConnectedLayer(relu, 48, 24),
                 ConnectedLayer(linear, 24, self.actions_n)
-            ], learning_rate=self.learning_rate, gradient_descent=gd, gd_momentum=self.gd_momentum)
+            ], learning_rate=self.learning_rate, **kwargs)
 
     def get_q_values(self, state, target=False):
         net = self.target_network if target else self.network
