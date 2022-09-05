@@ -3,21 +3,19 @@ SAVED_MODELS_ROOT = r"saved_models/"
 
 FPS = 0  # 0 for unlimited
 PORT = 5656
-GRID_SIZE_PIXELS = 60  # 30 for low res
+GRID_SIZE_PIXELS = 30  # 30 for low res
 
-HEIGHT = 1081  # 541 for low res
-WIDTH = 1921  # 961 for low res
+HEIGHT = 541  # 541 for low res
+WIDTH = 961  # 961 for low res
 
 SF = GRID_SIZE_PIXELS/60
 
 USE_UNREAL_SOCKET = False
 MESSAGE_LENGTH = 50  # padded to this length with @
 
-VELOCITY_CONSTANT = 1.5  # change the speed of car movement globally
+VELOCITY_CONSTANT = 1  # change the speed of car movement globally
 
 FREE_ROAM = False  # no collision
-
-MAX_EPISODE_FRAMES = 4000
 
 # COLOURS
 COL_BACKGROUND = (97, 139, 74)
@@ -28,6 +26,12 @@ COL_PLACED_ROAD = (84, 86, 86)
 # Q Learning
 LOAD_MODEL_STEER = None
 LOAD_MODEL_GAS = None
+LOAD_MODEL_COMBINED = "combined_model_05.09;13.30_654"
+
+MAX_EPISODE_FRAMES = 4000
+
+# either use separate DQN for steering and gas, or one combined DQN
+COMBINED_MODELS = True
 
 Q_LEARNING_SETTINGS = {
     "TRAINING_COMBINED": True,
@@ -36,19 +40,24 @@ Q_LEARNING_SETTINGS = {
 
     "LEARNING_RATE_STEER": 0.00000000000001,
     "LEARNING_RATE_GAS": 0.00000000000001,
-    "LEARNING_RATE_COMBINED": 0.00001,
+    "LEARNING_RATE_COMBINED": 0.0000000,
 
-    "DISCOUNT_RATE": 0.993,
+    "GD_MOMENTUM": 0.1,
 
-    "EXPLORATION_PROBABILITY_COMBINED": 1,
+    "DISCOUNT_RATE": 0.99,
+
+    "EXPLORATION_PROBABILITY_COMBINED": 0.5,
     "EXPLORATION_PROBABILITY_STEER": 0.5,
     "EXPLORATION_PROBABILITY_GAS": 1,
 
-    "EXPLORATION_DECAY_COMBINED": 0.00004,
+    "EXPLORATION_DECAY_COMBINED": 0.0001,
     "EXPLORATION_DECAY_STEER": 0.00004,
     "EXPLORATION_DECAY_GAS": 0.00004,
 
-    "TARGET_NET_COPY_STEPS": 20000,
+    "TARGET_NET_COPY_STEPS": 5000,
+    "TRAIN_AMOUNT": 0.8,
+
+    "BUFFER_LENGTH": 4000
 }
 
 

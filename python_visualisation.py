@@ -31,9 +31,15 @@ world.replicate_map_spawn()
 # ================================================ GAME LOOP ===========================================================
 run_ai_car_simulation(screen, world)
 
-if gs.get_q_learning_settings("gas")["TRAINING"]:
-    world.ai_car.controller.gas_q_learning.reward_graph()
-    world.ai_car.controller.gas_q_learning.save_model("gas")
-if gs.get_q_learning_settings("steer")["TRAINING"]:
-    world.ai_car.controller.steer_q_learning.reward_graph()
-    world.ai_car.controller.steer_q_learning.save_model("steer")
+try:
+    if gs.get_q_learning_settings("gas")["TRAINING"]:
+        world.ai_car.controller.gas_q_learning.reward_graph()
+        world.ai_car.controller.gas_q_learning.save_model("gas")
+    if gs.get_q_learning_settings("steer")["TRAINING"]:
+        world.ai_car.controller.steer_q_learning.reward_graph()
+        world.ai_car.controller.steer_q_learning.save_model("steer")
+except AttributeError:
+    if gs.get_q_learning_settings("combined")["TRAINING"]:
+        world.ai_car.controller.q_learning.reward_graph()
+        world.ai_car.controller.q_learning.error_graph(color="red")
+        world.ai_car.controller.q_learning.save_model("combined")

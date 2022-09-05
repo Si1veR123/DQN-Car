@@ -1,4 +1,4 @@
-from MachineLearning.neural_network_classes import NeuralNetwork, ConnectedLayer
+from MachineLearning.neural_network_classes import NeuralNetwork, ConnectedLayer, GradientDescent, MomentumGradientDescent
 from MachineLearning.activation_functions import relu, linear, tanh, sigmoid, softmax, leaky_relu
 
 import numpy as np
@@ -36,6 +36,7 @@ class DeepQLearning:
         self.exploration_probability = settings["EXPLORATION_PROBABILITY"] if settings["TRAINING"] else 0
         self.exploration_decay = settings["EXPLORATION_DECAY"]
         self.network_copy_steps = settings["TARGET_NET_COPY_STEPS"]
+        self.gd_momentum = settings["GD_MOMENTUM"]
 
         # load model if needed, or create a new one
         if load is not None:
@@ -49,9 +50,11 @@ class DeepQLearning:
 
         # a list of experiences per episode
         self.experience_buffer = []
-        self.train_amount = 0.7  # fraction of experiences to train on
+        self.train_amount = settings["TRAIN_AMOUNT"]  # fraction of experiences to train on
+        self.max_buffer_length = settings["BUFFER_LENGTH"]
 
         self.reward_cache = []
+        self.error_cache = []
 
     def create_network(self):
         raise NotImplementedError
@@ -80,7 +83,7 @@ class DeepQLearning:
     def update_experience_buffer(self, state, action, reward):
         self.experience_buffer.append((tuple(state), action, reward))
 
-        if len(self.experience_buffer) > 5000:
+        if len(self.experience_buffer) > self.max_buffer_length:
             self.experience_buffer.pop(0)
 
     def update_target_network(self):
@@ -96,8 +99,10 @@ class DeepQLearning:
             print("============================================")
             # number of experiences to train on
             training_experiences_count = int(len(self.experience_buffer) * self.train_amount) - 1
-            # seample indicies (in experience buffer) of experiences to train on, randomly
+            # sample indicies (in experience buffer) of experiences to train on, randomly
             experiences_indices = random.sample(range(len(self.experience_buffer)), training_experiences_count)
+
+            total_error = 0
 
             for experience_num in experiences_indices:
                 # experience: (state, action, reward)
@@ -138,7 +143,8 @@ class DeepQLearning:
 
                 correct_q_values[action] = q_target
 
-                self.fit(state, correct_q_values)
+                error = self.fit(state, correct_q_values)
+                total_error += error
 
                 # copy target network every network_copy_steps
                 self.frame_num += 1
@@ -151,15 +157,20 @@ class DeepQLearning:
 
             # sum of rewards in the episode
             self.reward_cache.append(sum(map(lambda x: x[2], self.experience_buffer)))
+            self.error_cache.append(total_error/training_experiences_count)
 
             self.experience_buffer = []
 
             # a method of troubleshooting by predicting a state to see how large changes are
-            test_q_values = self.get_q_values([30, 35, 43, 55, 300, 55, 43, 35, 30, 3])
+            test_q_values = self.get_q_values(([30, 35, 43, 55, 300, 55, 43, 35, 30, 3]*100)[:self.state_n])
             print("TEST Q VALUES", test_q_values)
 
-    def reward_graph(self):
-        pyplot.plot(self.reward_cache)
+    def reward_graph(self, **kwargs):
+        pyplot.plot(self.reward_cache, **kwargs)
+        pyplot.show()
+
+    def error_graph(self, **kwargs):
+        pyplot.plot(self.error_cache, **kwargs)
         pyplot.show()
 
     def save_model(self, type):
@@ -186,32 +197,35 @@ class CustomModelQLearning(DeepQLearning):
     Uses Custom model as Neural Network in Deep Q Learning
     """
     def create_network(self):
+        gd = GradientDescent if self.gd_momentum is None else MomentumGradientDescent
         return NeuralNetwork(
             [
-                ConnectedLayer(relu, self.state_n, 18),
-                ConnectedLayer(relu, 18, 36),
-                ConnectedLayer(relu, 36, 52),
-                ConnectedLayer(relu, 52, 72),
-                ConnectedLayer(relu, 72, 72),
-                ConnectedLayer(relu, 72, 52),
-                ConnectedLayer(relu, 52, 36),
-                ConnectedLayer(relu, 36, 18),
-                ConnectedLayer(relu, 18, 12),
-                ConnectedLayer(linear, 12, self.actions_n)
-            ], learning_rate=self.learning_rate)
+                ConnectedLayer(relu, self.state_n, 24),
+                ConnectedLayer(relu, 24, 48),
+                ConnectedLayer(relu, 48, 84),
+                ConnectedLayer(relu, 84, 128),
+                ConnectedLayer(relu, 128, 128),
+                ConnectedLayer(relu, 128, 84),
+                ConnectedLayer(relu, 84, 48),
+                ConnectedLayer(relu, 48, 24),
+                ConnectedLayer(linear, 24, self.actions_n)
+            ], learning_rate=self.learning_rate, gradient_descent=gd, gd_momentum=self.gd_momentum)
 
     def get_q_values(self, state, target=False):
         net = self.target_network if target else self.network
         return net.predict(state).tolist()
 
     def fit(self, state, correct_q_values):
-        self.network.train([state], [correct_q_values], epochs=1, log=False)
+        # return error
+        return self.network.train([state], [correct_q_values], epochs=1, log=False)[0]
 
     def save_model(self, type):
         # time and average of rewards
         name = gs.SAVED_MODELS_ROOT + type + "_model_" + datetime.datetime.now().strftime("%d.%m;%H.%M") + "_" + str(int(sum(self.reward_cache) / len(self.reward_cache)))
         self.network.save_to_file(name)
         self._save_settings(name)
+        pyplot.plot(self.reward_cache)
+        pyplot.savefig(name+".jpg")
 
     @classmethod
     def load_model(cls, name):

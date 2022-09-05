@@ -70,11 +70,13 @@ class AICar(Car):
     """
     def __init__(self, car_name):
         self.ray_angle_range = 80
-        self.ray_count = 9
+        self.ray_count = 7
         self.ray_distance = 300 * gs.SF
         self.ray_check_frequency = 5 * gs.SF
 
-        super().__init__(car_name, AutonomousDrivingControllerCombined(self.ray_count + 1))
+        controller = AutonomousDrivingControllerCombined if gs.COMBINED_MODELS else AutonomousDrivingControllerSeparate
+
+        super().__init__(car_name, controller(self.ray_count + 1))
 
         self.ray_offset = np.array((0, self.controller.wheel_distance * .7))
 
@@ -98,7 +100,7 @@ class AICar(Car):
 
             # trace this ray for collisions, then set as state for AI
             self.controller.state[ray_number] = self.ray_trace(ray_start, ray_end, world, screen)*(1/gs.SF)  # state is as if no scaling is applied, so reverse scaling
-        self.controller.state[self.ray_count] = self.controller.velocity
+        self.controller.state[self.ray_count] = self.controller.velocity*gs.VELOCITY_CONSTANT
 
     def ray_trace(self, start, end, world, screen=None):
         # start and end are numpy arrays, 2 length

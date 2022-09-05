@@ -10,9 +10,15 @@ Classes to make a neural network using numpy arrays as matrices for weights and 
 
 
 class NeuralNetwork:
-    def __init__(self, layers, learning_rate=0.1):
+    def __init__(self, layers, learning_rate=0.1, gradient_descent=None, **kwargs):
         self.layers = layers
         self.learning_rate = learning_rate
+
+        if gradient_descent is not None:
+            # if kwargs contain gd_momentum, the a kwarg called momentum will be passed to gradient descent, etc.
+            gd_kwargs = {kwarg[3:]: kwargs[kwarg] for kwarg in filter(lambda x: x.startswith("gd_"), kwargs.keys())}
+            for l in self.layers:
+                l.set_gradient_descent(gradient_descent, **gd_kwargs)
 
     def reset(self):
         for l in self.layers:
@@ -126,6 +132,30 @@ class NeuralNetwork:
         return obj
 
 
+class GradientDescent:
+    @staticmethod
+    def get_parameter_change(change, learning_rate, bias):
+        return change*learning_rate
+
+
+class MomentumGradientDescent(GradientDescent):
+    def __init__(self, momentum=0.5):
+        self.momentum = momentum
+        self.previous_weight_change = 0
+        self.previous_bias_change = 0
+
+    def get_parameter_change(self, change, learning_rate, bias):
+        relevant_previous_change = self.previous_bias_change if bias else self.previous_weight_change
+        gd_change = change*learning_rate + self.momentum*relevant_previous_change
+
+        if bias:
+            self.previous_bias_change = gd_change
+        else:
+            self.previous_weight_change = gd_change
+
+        return gd_change
+
+
 class Layer:
     def __init__(self, activation, input_size, output_size):
         self.input = np.empty(0)
@@ -136,13 +166,17 @@ class Layer:
             self.weights = np.random.normal(0, np.sqrt(2/input_size), size=(input_size, output_size))
         else:
             # xavier weight initialisation
-
             lower, upper = -(1.0 / np.sqrt(input_size)), (1.0 / np.sqrt(input_size))
             self.weights = lower + np.random.rand(input_size, output_size) * (upper-lower)
 
         self.biases = np.full(shape=output_size, fill_value=0.1, dtype=np.float32)
 
         self.activation = activation
+
+        self.gradient_descent = GradientDescent()  # default
+
+    def set_gradient_descent(self, algorithm, **gd_kwargs):
+        self.gradient_descent = algorithm(**gd_kwargs)
 
     def reset(self):
         a = self.activation
@@ -176,8 +210,8 @@ class ConnectedLayer(Layer):
         input_d = np.dot(undo_activation, self.weights.T)
         d_weights = np.dot(self.input.T, undo_activation)
 
-        self.weights = self.weights - d_weights * learning_rate
-        self.biases = self.biases - undo_activation * learning_rate
+        self.weights = self.weights - self.gradient_descent.get_parameter_change(d_weights, learning_rate, False)
+        self.biases = self.biases - self.gradient_descent.get_parameter_change(undo_activation, learning_rate, True)
 
         return input_d
 
@@ -217,7 +251,7 @@ class CustomConnected(ConnectedLayer):
         d_weights = np.dot(self.input.T, undo_activation)
         d_new_weights = np.multiply(d_weights, self.weights_mask)  # changed from parent
 
-        self.weights = self.weights - d_new_weights * learning_rate
-        self.biases = self.biases - undo_activation * learning_rate
+        self.weights = self.weights - self.gradient_descent.get_parameter_change(d_new_weights, learning_rate, False)
+        self.biases = self.biases - self.gradient_descent.get_parameter_change(undo_activation, learning_rate, True)
 
         return input_d

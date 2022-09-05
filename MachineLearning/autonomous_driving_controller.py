@@ -4,28 +4,44 @@ from MachineLearning.q_learning import CustomModelQLearning
 import global_settings as gs
 
 
-class AutonomousDrivingControllerSeparate(CarControllerKinematic):
-    # driving controller with separate gas and steering networks
+class AutonomousDrivingController(CarControllerKinematic):
+    # base that doesnt include DQN
     def __init__(self, state_n):
         super().__init__()
         self.state = [0 for _ in range(state_n)]
 
-        self.steer_q_learning = CustomModelQLearning(state_n, 3, gs.LOAD_MODEL_STEER, "STEER")
-        self.gas_q_learning = CustomModelQLearning(state_n, 3, gs.LOAD_MODEL_GAS, "GAS")
-
-        self.brake_amount = 0.1
-        self.accelerate_amount = 0.1
+        self.brake_amount = 0.03
+        self.accelerate_amount = 0.03
         self.steer_amount = 80
 
         self.max_velocity = 6
         self.max_steering = 80
-        self.start_velocity = 3
+        self.start_velocity = 1.5
 
         self.distance_travelled = 0
 
-        self.current_action = [0, 0]  # [steer action, gas action]
-
+        self.current_action = 0
         self.ai_dead = False
+
+    def end_of_episode(self):
+        raise NotImplementedError
+
+    def end_of_frame(self):
+        raise NotImplementedError
+
+    def evaluate_reward(self, gas):
+        raise NotImplementedError
+
+
+class AutonomousDrivingControllerSeparate(AutonomousDrivingController):
+    # driving controller with separate gas and steering networks
+    def __init__(self, state_n):
+        super().__init__(state_n)
+
+        self.steer_q_learning = CustomModelQLearning(state_n, 3, gs.LOAD_MODEL_STEER, "STEER")
+        self.gas_q_learning = CustomModelQLearning(state_n, 3, gs.LOAD_MODEL_GAS, "GAS")
+
+        self.current_action = [0, 0]  # [steer action, gas action]
 
     def end_of_episode(self):
         # New episode so reset controls
@@ -129,27 +145,11 @@ class AutonomousDrivingControllerSeparate(CarControllerKinematic):
             return 1
 
 
-class AutonomousDrivingControllerCombined(CarControllerKinematic):
+class AutonomousDrivingControllerCombined(AutonomousDrivingController):
     # driving controller with combined gas and steering networks
     def __init__(self, state_n):
-        super().__init__()
-        self.state = [0 for _ in range(state_n)]
-
-        self.q_learning = CustomModelQLearning(state_n, 5, None, "COMBINED")
-
-        self.brake_amount = 0.1
-        self.accelerate_amount = 0.1
-        self.steer_amount = 80
-
-        self.max_velocity = 6
-        self.max_steering = 80
-        self.start_velocity = 3
-
-        self.distance_travelled = 0
-
-        self.current_action = 0
-
-        self.ai_dead = False
+        super().__init__(state_n)
+        self.q_learning = CustomModelQLearning(state_n, 5, gs.LOAD_MODEL_COMBINED, "COMBINED")
 
     def end_of_episode(self):
         # New episode so reset controls
