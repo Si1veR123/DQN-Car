@@ -21,14 +21,14 @@ class DeepQLearning:
         target networks
         save/load
     """
-    def __init__(self, state_n, actions_n, load=None, model_type=""):
+    def __init__(self, state_n, actions_n, load=None):
         self.state_n = state_n
         self.actions_n = actions_n
 
         # number of frames since start
         self.frame_num = 0
 
-        settings = gs.get_q_learning_settings(model_type)
+        settings = gs.Q_LEARNING_SETTINGS
 
         # hyperparameters copied from global settings
         self.learning_rate = settings["LEARNING_RATE"]

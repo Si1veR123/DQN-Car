@@ -27,20 +27,13 @@ FREE_ROAM = False  # no collision
 
 
 # ======== Deep Q Learning ========
-LOAD_MODEL_STEER = None
-LOAD_MODEL_GAS = None
-LOAD_MODEL_COMBINED = None
+LOAD_MODEL = None
 MAX_EPISODE_FRAMES = 4000
-
-# either use separate DQN for steering and gas, or one combined DQN
-COMBINED_MODELS = True
 
 Q_LEARNING_SETTINGS = {
     "TRAINING": True,
 
-    "LEARNING_RATE_STEER": 0.00000000000001,
-    "LEARNING_RATE_GAS": 0.00000000000001,
-    "LEARNING_RATE_COMBINED": 1e-010,
+    "LEARNING_RATE": 1e-010,
 
     "GD_MOMENTUM": 0.9,
 
@@ -56,29 +49,5 @@ Q_LEARNING_SETTINGS = {
     "BUFFER_LENGTH": 4000
 }
 
-# ======== MORE SETTINGS CODE ========
-
-# if any training settings are True, program is training a model
-TRAINING = any([val for setting, val in Q_LEARNING_SETTINGS.items() if setting.startswith("TRAINING")])
-
-
-def get_q_learning_settings(suffix: str):
-    """
-    Given a suffix e.g. STEER, returns all settings for that Q Learning model
-    If setting doesn't end in STEER or other suffix, it is assumed to be used for all suffixes
-    """
-    settings = {}
-    suffix = "_" + suffix.upper()
-
-    for setting in Q_LEARNING_SETTINGS.keys():
-        # settings ending in suffix
-        if setting.endswith(suffix):
-            settings[setting.replace(suffix, "")] = Q_LEARNING_SETTINGS[setting]
-
-    for setting in Q_LEARNING_SETTINGS.keys():
-        # settings that dont end in any suffix
-        setting_root = "_".join(setting.split("_")[:-1])
-        if setting_root not in settings.keys():
-            settings[setting] = Q_LEARNING_SETTINGS[setting]
-
-    return settings
+# backward compatibility
+TRAINING = Q_LEARNING_SETTINGS["TRAINING"]

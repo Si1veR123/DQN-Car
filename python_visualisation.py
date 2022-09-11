@@ -20,7 +20,7 @@ def main_app(map_override=None, background=False):
     """
     :param map_override: a map name to use instead of showing map selection screen, defaults to None
     :param background: run the PyGame window in the background, or use dimensions from settings
-    :return: DeepQLearning object(s) with learned parameters
+    :return: DeepQLearning object with learned parameters
     """
     # Create Window
     # if in background, make size (1, 1)
@@ -43,23 +43,13 @@ def main_app(map_override=None, background=False):
     run_ai_car_simulation(screen, world)
 
     # show reward graphs, error graphs and save models, IF TRAINING
-    # return the relevant DQN models
+    # return the DQN model
     controller = world.ai_car.controller
-    try:
-        if gs.get_q_learning_settings("gas")["TRAINING"]:
-            controller.gas_q_learning.reward_graph()
-            controller.gas_q_learning.save_model("gas")
-        if gs.get_q_learning_settings("steer")["TRAINING"]:
-            controller.steer_q_learning.reward_graph()
-            controller.steer_q_learning.save_model("steer")
-        return controller.gas_q_learning, controller.steer_q_learning
-    except AttributeError:
-        # using combined, not individual
-        if gs.get_q_learning_settings("combined")["TRAINING"]:
-            controller.q_learning.reward_graph()
-            controller.q_learning.error_graph(color="red")
-            controller.q_learning.save_model("combined")
-        return controller.q_learning
+    if gs.Q_LEARNING_SETTINGS["TRAINING"]:
+        controller.q_learning.reward_graph()
+        controller.q_learning.error_graph(color="red")
+        controller.q_learning.save_model("combined")
+    return controller.q_learning
 
 
 if __name__ == '__main__':
