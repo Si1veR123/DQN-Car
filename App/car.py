@@ -78,7 +78,7 @@ class AICar(Car):
         self.ray_offset = np.array((0, self.controller.wheel_distance * 0.7))
 
     def reset_state(self):
-        self.controller.end_of_episode()
+        pass
 
     def trace_all_rays(self, world, screen):
         # The rotated offset from center of car to ray start position

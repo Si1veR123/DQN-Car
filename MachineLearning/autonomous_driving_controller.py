@@ -23,7 +23,7 @@ class AutonomousDrivingController(CarControllerKinematic):
         self.current_action = 0
         self.ai_dead = False
 
-    def end_of_episode(self):
+    def end_of_episode(self, verbose=2):
         raise NotImplementedError
 
     def end_of_frame(self):
@@ -39,7 +39,7 @@ class AutonomousDrivingControllerCombined(AutonomousDrivingController):
         super().__init__(state_n)
         self.q_learning = CustomModelQLearning(state_n, 5, gs.LOAD_MODEL)
 
-    def end_of_episode(self):
+    def end_of_episode(self, verbose=2):
         # New episode so reset controls
         self.steering_angle = 0
         self.velocity = self.start_velocity
@@ -47,8 +47,7 @@ class AutonomousDrivingControllerCombined(AutonomousDrivingController):
         # start training and decay probability
         if gs.Q_LEARNING_SETTINGS["TRAINING"]:
             self.q_learning.decay_exploration_probability()
-            print("TRAINING")
-            self.q_learning.train()
+            self.q_learning.train(verbose)
 
         self.distance_travelled = 0
 

@@ -21,7 +21,7 @@ def collision_filter(screen, world):
             pygame.draw.rect(screen, colour, pygame.rect.Rect((x, y), (3, 3)))
 
 
-def run_ai_car_simulation(screen, world: World):
+def run_ai_car_simulation(screen, world: World, verbose, end_at_min_epsilon=False):
     world.initiate_cars()
 
     default_font = pygame.font.Font(pygame.font.get_default_font(), 24)
@@ -73,8 +73,11 @@ def run_ai_car_simulation(screen, world: World):
 
         # If AI car has crashed, reset all cars
         if world.ai_car.controller.ai_dead or (episode_frames >= gs.MAX_EPISODE_FRAMES and gs.TRAINING):
-
+            # check whether to exit loop, if min epsilon reached
+            if end_at_min_epsilon and world.ai_car.controller.q_learning.epsilon == gs.Q_LEARNING_SETTINGS["EPSILON_MIN"]:
+                return
             world.initiate_cars()
+            world.ai_car.controller.end_of_episode(verbose)
             episode_frames = 0
 
         fps_text = default_font.render(str(int(clock.get_fps())), False, (255, 255, 255))

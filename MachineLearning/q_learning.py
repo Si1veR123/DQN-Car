@@ -33,9 +33,9 @@ class DeepQLearning:
         # hyperparameters copied from global settings
         self.learning_rate = settings["LEARNING_RATE"]
         self.discount_rate = settings["DISCOUNT_RATE"]
-        self.exploration_probability = settings["EXPLORATION_PROBABILITY"] if settings["TRAINING"] else 0
-        self.exploration_decay = settings["EXPLORATION_DECAY"]
-        self.min_exploration = settings["EXPLORATION_MIN"]
+        self.epsilon = settings["EPSILON_PROBABILITY"] if settings["TRAINING"] else 0
+        self.epsilon_decay = settings["EPSILON_DECAY"]
+        self.min_epsilon = settings["EPSILON_MIN"]
         self.network_copy_steps = settings["TARGET_NET_COPY_STEPS"]
         self.gd_momentum = settings["GD_MOMENTUM"]
 
@@ -74,12 +74,12 @@ class DeepQLearning:
         # y = e^(-decay*x)
         # so
         # new = old * e^-decay
-        self.exploration_probability = max(self.exploration_probability * np.exp(-self.exploration_decay), self.min_exploration)
+        self.epsilon = max(self.epsilon * np.exp(-self.epsilon_decay), self.min_epsilon)
 
     def get_action(self, state):
         # get action for state (largest q value)
         # if probability is correct, choose random action (epsilon greedy)
-        if random.random() < self.exploration_probability and gs.TRAINING:
+        if random.random() < self.epsilon and gs.TRAINING:
             action = random.randint(0, self.actions_n-1)
             return action, [int(a == action) for a in range(self.actions_n)]
 
@@ -104,9 +104,12 @@ class DeepQLearning:
     def fit(self, state, correct_q_values):
         raise NotImplementedError
 
-    def train(self):
+    def train(self, verbose):
         if len(self.experience_buffer):
-            print("============================================")
+
+            if verbose:
+                print("============================================")
+
             # number of experiences to train on
             training_experiences_count = int(len(self.experience_buffer) * self.train_amount) - 1
             # sample indicies (in experience buffer) of experiences to train on, randomly
@@ -140,10 +143,10 @@ class DeepQLearning:
                 # correct q values
                 correct_q_values = self.get_q_values(state)
 
-                if self.frame_num % 10 == 0:
+                if self.frame_num % 10 == 0 and verbose >= 2:
                     # dont print all Q values, only about 1/10 to reduce printed text
                     print("Q VALUES", correct_q_values)
-                if experience_num == len(self.experience_buffer)-1:
+                if experience_num == len(self.experience_buffer)-1 and verbose >= 2:
                     # also print final Q values as it can be useful
                     print("Q VALUES FINAL", correct_q_values)
 
@@ -161,9 +164,10 @@ class DeepQLearning:
                 if self.frame_num % self.network_copy_steps == 0:
                     self.update_target_network()
 
-            print("Exploration:", self.exploration_probability)
-            print("Reward:", sum(map(lambda x: x[2], self.experience_buffer)))
-            print("============================================\n")
+            if verbose:
+                print("Exploration:", self.epsilon)
+                print("Reward:", sum(map(lambda x: x[2], self.experience_buffer)))
+                print("============================================\n")
 
             # sum of rewards in the episode
             self.reward_cache.append(sum(map(lambda x: x[2], self.experience_buffer)))
@@ -171,14 +175,19 @@ class DeepQLearning:
 
             self.experience_buffer = []
 
-            # a method of troubleshooting by predicting a state to see how large changes are
-            test_q_values = self.get_q_values(([30, 35, 43, 55, 300, 55, 43, 35, 30, 3]*100)[:self.state_n])
-            print("TEST Q VALUES", test_q_values)
+            if verbose >= 2:
+                # a method of troubleshooting by predicting a state to see how large changes are
+                test_q_values = self.get_q_values(([30, 35, 43, 55, 300, 55, 43, 35, 30, 3]*100)[:self.state_n])
+                print("TEST Q VALUES", test_q_values)
 
     def reward_graph(self, **kwargs):
         print("LEARNING RATE:", self.learning_rate)
         pyplot.plot(self.reward_cache, **kwargs)
         pyplot.show()
+
+    @property
+    def mean_rewards(self):
+        return int(sum(self.reward_cache) / len(self.reward_cache))
 
     def error_graph(self, **kwargs):
         pyplot.plot(self.error_cache, **kwargs)
@@ -234,7 +243,7 @@ class CustomModelQLearning(DeepQLearning):
 
     def save_model(self, type):
         # time and average of rewards
-        name = gs.SAVED_MODELS_ROOT + type + "_model_" + datetime.datetime.now().strftime("%d.%m;%H.%M") + "_" + str(int(sum(self.reward_cache) / len(self.reward_cache)))
+        name = gs.SAVED_MODELS_ROOT + type + "_model_" + datetime.datetime.now().strftime("%d.%m;%H.%M") + "_" + str(self.mean_rewards)
         self.network.save_to_file(name)
         self._save_settings(name)
         pyplot.plot(self.reward_cache)

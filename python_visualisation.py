@@ -16,12 +16,16 @@ from App.AppScreens.map_selection import run_map_selection
 import global_settings as gs
 
 
-def main_app(map_override=None, background=False):
+def main_app(map_override=None, background=False, end_at_min_epsilon=False, verbose=2):
     """
     :param map_override: a map name to use instead of showing map selection screen, defaults to None
     :param background: run the PyGame window in the background, or use dimensions from settings
+    :param end_at_min_epsilon: close training window when min epsilon is reached
     :return: DeepQLearning object with learned parameters
     """
+    if background and map_override is None:
+        raise TypeError("Background without map override. Impossible to choose map.")
+
     # Create Window
     # if in background, make size (1, 1)
     dim = (1, 1) if background else (gs.WIDTH, gs.HEIGHT)
@@ -32,7 +36,7 @@ def main_app(map_override=None, background=False):
     if map_override is None:
         selected_map = run_map_selection(screen)
     else:
-        selected_map = Map.load_map(map_override)
+        selected_map = Map.load_map(map_override)[0]
 
     # ================================================= MAP BUILDER ====================================================
 
@@ -40,7 +44,7 @@ def main_app(map_override=None, background=False):
     world.replicate_map_spawn()
 
     # ================================================ GAME LOOP =======================================================
-    run_ai_car_simulation(screen, world)
+    run_ai_car_simulation(screen, world, end_at_min_epsilon=end_at_min_epsilon, verbose=verbose)
 
     # show reward graphs, error graphs and save models, IF TRAINING
     # return the DQN model
