@@ -19,16 +19,15 @@ class Car(ReplicatedTransform):
     The controller handles the movement.
     """
     def __init__(self, car_name, controller):
-        super().__init__("car", car_name)
+        super().__init__("car", car_name, "loc")
         self.controller = controller
 
         # default is 400px, so scale
-        scale = (gs.GRID_SIZE_PIXELS/60)
-        self.car_size = 40 * scale
+        self.car_size = 40 * gs.SF
         self.car_image = pygame.transform.scale(pygame.image.load("image_assets/car.png"), tuple([self.car_size]*2))
 
-        self.x_bound = 8 * scale
-        self.y_bound = 18 * scale
+        self.x_bound = 8 * gs.SF
+        self.y_bound = 18 * gs.SF
 
     def tick(self):
         pass
@@ -76,9 +75,9 @@ class AICar(Car):
 
         controller = AutonomousDrivingControllerCombined if gs.COMBINED_MODELS else AutonomousDrivingControllerSeparate
 
-        super().__init__(car_name, controller(self.ray_count + 1))
+        super().__init__(car_name, controller(self.ray_count + 1))  # add 1 for velocity state
 
-        self.ray_offset = np.array((0, self.controller.wheel_distance * .7))
+        self.ray_offset = np.array((0, self.controller.wheel_distance * 0.7))
 
     def reset_state(self):
         self.controller.end_of_episode()
@@ -100,7 +99,7 @@ class AICar(Car):
 
             # trace this ray for collisions, then set as state for AI
             self.controller.state[ray_number] = self.ray_trace(ray_start, ray_end, world, screen)*(1/gs.SF)  # state is as if no scaling is applied, so reverse scaling
-        self.controller.state[self.ray_count] = self.controller.velocity*gs.VELOCITY_CONSTANT
+        self.controller.state[self.ray_count] = self.controller.velocity
 
     def ray_trace(self, start, end, world, screen=None):
         # start and end are numpy arrays, 2 length

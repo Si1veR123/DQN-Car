@@ -14,9 +14,10 @@ class ReplicatedData:
         prepare_replicated_data is implemented by children for different data types, converting the previous data to dict
         send_data tells the socket to send the dict
     """
-    def __init__(self, replicate_type: str, object_name):
-        self.replicate_type = replicate_type
-        self.object_name = object_name
+    def __init__(self, object_type: str, object_name, data_type: str):
+        self.object_type = object_type  # not unique
+        self.object_name = object_name  # unique
+        self.data_type = data_type
 
     def replicate_data(self, socket: LocalTCPSocket):
         data = self.get_data_to_replicate()  # implemented by object that is replicating
@@ -30,7 +31,7 @@ class ReplicatedData:
         raise NotImplementedError
 
     def send_data(self, socket: LocalTCPSocket, replicate_data):
-        socket.send_ue_data(self.replicate_type, self.object_name, replicate_data)
+        socket.send_ue_data(self.object_type, self.object_name, self.data_type, replicate_data)
 
 
 class ReplicatedTransform(ReplicatedData):

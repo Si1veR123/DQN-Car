@@ -1,8 +1,8 @@
 from SocketCommunication.tcp_socket import LocalTCPSocket
 from App.placeable import Placeable, SolidBlock
 from App.car import AICar
-from App.road import StraightRoad
-from misc_funcs import color_lerp
+from App.road import StraightRoad, Road, CurvedRoad, LargeCurvedRoad
+from misc_funcs import color_lerp, rotate_vector_acw
 import pygame
 import numpy as np
 import datetime
@@ -100,14 +100,36 @@ class World:
         return self.npc_cars + [self.ai_car]
 
     def replicate_map_spawn(self):
+        if self.socket is None:
+            return
+
         for row_num, row in enumerate(self.map.grid):
             for col_num, col in enumerate(row):
                 if col.replicate_spawn:
-                    try:
-                        self.socket.send_ue_data("spawn", col.name_id, {"gridx": col_num, "gridy": row_num})
-                    except AttributeError:
-                        # socket is None, not in use
-                        pass
+                    data = {"gridx": col_num, "gridy": row_num}
+                    if issubclass(type(col), Road):
+                        if isinstance(col, LargeCurvedRoad):
+                            # only send 5 because thats all UE uses for large curves
+                            if col.section != 5:
+                                continue
+                            # center
+                            offset = rotate_vector_acw((-0.5, 1.5), col.rotation * 90)
+                            data["gridx"] = data["gridx"] + offset[0]
+                            data["gridy"] = data["gridy"] + offset[1]
+                        elif isinstance(col, CurvedRoad):
+                            # only send 0 because thats all UE uses for small curves
+                            if col.section != 0:
+                                continue
+                            # center
+                            offset = rotate_vector_acw((0.5, 0.5), col.rotation*90)
+                            data["gridx"] = data["gridx"] + offset[0]
+                            data["gridy"] = data["gridy"] + offset[1]
+
+                        data["rot"] = col.rotation*90
+
+                    self.socket.send_ue_data("spawn", col.name_id, "loc", data)
+                else:
+                    self.socket.send_ue_data("spawn", "empty", "loc", {"gridx": col_num, "gridy": row_num})
 
     def initiate_cars(self):
         """
@@ -144,10 +166,10 @@ class World:
 
             car.reset_state()
 
-    def update_cars(self, velocity_constant):
+    def update_cars(self):
         # update each car's controller
         for car in self.all_cars:
-            car.controller.update_transform(velocity_constant)
+            car.controller.update_transform()
 
     def blit_cars(self, screen):
         # Tick and draw each car

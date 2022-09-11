@@ -35,6 +35,7 @@ class DeepQLearning:
         self.discount_rate = settings["DISCOUNT_RATE"]
         self.exploration_probability = settings["EXPLORATION_PROBABILITY"] if settings["TRAINING"] else 0
         self.exploration_decay = settings["EXPLORATION_DECAY"]
+        self.min_exploration = settings["EXPLORATION_MIN"]
         self.network_copy_steps = settings["TARGET_NET_COPY_STEPS"]
         self.gd_momentum = settings["GD_MOMENTUM"]
 
@@ -73,7 +74,7 @@ class DeepQLearning:
         # y = e^(-decay*x)
         # so
         # new = old * e^-decay
-        self.exploration_probability = self.exploration_probability * np.exp(-self.exploration_decay)
+        self.exploration_probability = max(self.exploration_probability * np.exp(-self.exploration_decay), self.min_exploration)
 
     def get_action(self, state):
         # get action for state (largest q value)
@@ -175,6 +176,7 @@ class DeepQLearning:
             print("TEST Q VALUES", test_q_values)
 
     def reward_graph(self, **kwargs):
+        print("LEARNING RATE:", self.learning_rate)
         pyplot.plot(self.reward_cache, **kwargs)
         pyplot.show()
 
@@ -212,7 +214,10 @@ class CustomModelQLearning(DeepQLearning):
                 ConnectedLayer(relu, 24, 48),
                 ConnectedLayer(relu, 48, 84),
                 ConnectedLayer(relu, 84, 128),
-                ConnectedLayer(relu, 128, 128),
+                ConnectedLayer(relu, 128, 256),
+                ConnectedLayer(relu, 256, 256),
+                ConnectedLayer(relu, 256, 256),
+                ConnectedLayer(relu, 256, 128),
                 ConnectedLayer(relu, 128, 84),
                 ConnectedLayer(relu, 84, 48),
                 ConnectedLayer(relu, 48, 24),

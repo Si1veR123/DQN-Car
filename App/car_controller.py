@@ -13,7 +13,7 @@ class CarController:
         self.rotation = 0
         self.scale = (0, 0)
 
-    def update_transform(self, time):
+    def update_transform(self):
         """
         :param time: time since last update
         :return:
@@ -29,7 +29,7 @@ class CarControllerRoadFollow(CarController):
         super().__init__()
         self.road = road
 
-    def update_transform(self, time):
+    def update_transform(self):
         raise NotImplementedError
 
 
@@ -47,7 +47,7 @@ class CarControllerKinematic(CarController):
 
         self.wheel_distance = 1 * (gs.GRID_SIZE_PIXELS/60)
 
-    def update_transform(self, velocity_constant):
+    def update_transform(self):
         # not really mathematically correct but works for its purpose
         # higher velocities turn less
 
@@ -58,10 +58,10 @@ class CarControllerKinematic(CarController):
             radius = 99999999999999999
 
         if self.velocity:
-            self.rotation += 1/radius
+            self.rotation += 2/radius
 
         # move forward by the velocity rotated clockwise by rotation
-        self.location += rotate_vector_acw(np.array((0, self.velocity * velocity_constant)), -self.rotation)
+        self.location += rotate_vector_acw(np.array((0, self.velocity)), -self.rotation)
 
         self.velocity += self.acceleration
 
@@ -70,7 +70,7 @@ class PlayerController(CarControllerKinematic):
     """
     Controls the car by arrow keys
     """
-    def update_transform(self, velocity_constant):
+    def update_transform(self):
         print(self.velocity)
         keys = pygame.key.get_pressed()
 
@@ -88,4 +88,4 @@ class PlayerController(CarControllerKinematic):
         else:
             self.steering_angle = 0
 
-        super().update_transform(velocity_constant)
+        super().update_transform()

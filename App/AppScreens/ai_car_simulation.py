@@ -58,7 +58,7 @@ def run_ai_car_simulation(screen, world: World):
         world.ai_car.trace_all_rays(world, screen)
 
         # Move all cars
-        world.update_cars(gs.VELOCITY_CONSTANT)
+        world.update_cars()
 
         # Check if crashed
         world.car_collision()

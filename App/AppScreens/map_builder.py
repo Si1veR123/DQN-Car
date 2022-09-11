@@ -20,7 +20,7 @@ def run_map_builder(screen) -> Tuple[Map, bool]:
 
     fps = gs.FPS
 
-    map = Map(grid_dimensions)
+    map_obj = Map(grid_dimensions)
 
     clock = pygame.time.Clock()
     run = True
@@ -45,37 +45,37 @@ def run_map_builder(screen) -> Tuple[Map, bool]:
         )
 
         # get the current placeable object beneath the cursor
-        current_block = map.grid[mouse_grid[1]][mouse_grid[0]]
+        current_block = map_obj.grid[mouse_grid[1]][mouse_grid[0]]
 
         l_clicked, r_clicked = pygame.mouse.get_pressed()[0], pygame.mouse.get_pressed()[2]
 
         # if grid position is already selected, move to next frame
         if type(current_block) == SolidRoadPath and not r_clicked:
-            map.blit_grid(screen, game_time)
+            map_obj.blit_grid(screen, game_time)
             pygame.display.update()
             continue
 
         if l_clicked:
             # lock in current grid position to be a road
-            map.spawn_item_local(SolidRoadPath(gs.COL_PLACED_ROAD, gs.GRID_SIZE_PIXELS, game_time), mouse_grid)
+            map_obj.spawn_item_local(SolidRoadPath(gs.COL_PLACED_ROAD, gs.GRID_SIZE_PIXELS, game_time), mouse_grid)
         else:
             # color the current grid position with highlighted color
-            map.spawn_item_local(SolidBlock(gs.COL_MOUSE_HIGHLIGHT, gs.GRID_SIZE_PIXELS), mouse_grid)
+            map_obj.spawn_item_local(SolidBlock(gs.COL_MOUSE_HIGHLIGHT, gs.GRID_SIZE_PIXELS), mouse_grid)
 
-        map.blit_grid(screen, game_time)
+        map_obj.blit_grid(screen, game_time)
 
         pygame.display.update()
 
         if not l_clicked:
             # replace block after drawing the highlight
-            map.spawn_item_local(SolidBlock(gs.COL_BACKGROUND, gs.GRID_SIZE_PIXELS), mouse_grid)
+            map_obj.spawn_item_local(SolidBlock(gs.COL_BACKGROUND, gs.GRID_SIZE_PIXELS), mouse_grid)
 
     # matrix of grid, where 1 indicates a painted road and 0 is empty
-    painted_roads = [[1 if type(x) == SolidRoadPath else 0 for x in y] for y in map.grid]
+    painted_roads = [[1 if type(x) == SolidRoadPath else 0 for x in y] for y in map_obj.grid]
 
-    dimensions = np.array(map.grid).shape[::-1]
+    dimensions = np.array(map_obj.grid).shape[::-1]
 
-    map.reset_grid(dimensions)
+    map_obj.reset_grid(dimensions)
 
     # create roads from painted roads, and spawn them in
     roads = generate_roads(painted_roads, gs.GRID_SIZE_PIXELS)
@@ -83,15 +83,15 @@ def run_map_builder(screen) -> Tuple[Map, bool]:
     for row_num, row in enumerate(roads):
         for col_num, col in enumerate(row):
             if col not in (None, np.nan):
-                map.spawn_item_local(col, (col_num, row_num))
+                map_obj.spawn_item_local(col, (col_num, row_num))
 
     draw_background(screen, grid=False)
-    map.blit_grid(screen, pygame.time.get_ticks() / 1000)
+    map_obj.blit_grid(screen, pygame.time.get_ticks() / 1000)
     pygame.display.update()
 
     save = input("Save Map (y/n):") == "y"
     if save:
         # save map to path
-        map.save_map(screen)
+        map_obj.save_map(screen)
 
-    return map, save
+    return map_obj, save

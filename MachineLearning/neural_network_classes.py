@@ -9,6 +9,7 @@ Classes to make a neural network using numpy arrays as matrices for weights and 
 """
 
 
+# NEURAL NETWORK =======================
 class NeuralNetwork:
     def __init__(self, layers, learning_rate=0.1, gradient_descent=None, **kwargs):
         self.layers = layers
@@ -54,6 +55,7 @@ class NeuralNetwork:
 
     def train(self, x, y, epochs=10, log=True):
         """
+        :param log: print log information?
         :param epochs: number of epochs to train for
         :param x:[
                     [inputs1],
@@ -132,6 +134,7 @@ class NeuralNetwork:
         return obj
 
 
+# GRADIENT DESCENT =========================
 class GradientDescent:
     @staticmethod
     def get_parameter_change(change, learning_rate, bias):
@@ -156,6 +159,7 @@ class MomentumGradientDescent(GradientDescent):
         return gd_change
 
 
+# NETWORK LAYERS ===========================
 class Layer:
     def __init__(self, activation, input_size, output_size):
         self.input = np.empty(0)

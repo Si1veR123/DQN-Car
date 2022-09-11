@@ -16,7 +16,7 @@ class AutonomousDrivingController(CarControllerKinematic):
 
         self.max_velocity = 6
         self.max_steering = 80
-        self.start_velocity = 1.5
+        self.start_velocity = 3
 
         self.distance_travelled = 0
 
@@ -29,7 +29,7 @@ class AutonomousDrivingController(CarControllerKinematic):
     def end_of_frame(self):
         raise NotImplementedError
 
-    def evaluate_reward(self, gas):
+    def evaluate_reward(self):
         raise NotImplementedError
 
 
@@ -63,7 +63,7 @@ class AutonomousDrivingControllerSeparate(AutonomousDrivingController):
 
         self.ai_dead = False
 
-    def update_transform(self, velocity_constant):
+    def update_transform(self):
         """
         steer_actions:
         0: nothing
@@ -76,7 +76,7 @@ class AutonomousDrivingControllerSeparate(AutonomousDrivingController):
         2: accelerate
         """
 
-        self.distance_travelled += self.velocity*velocity_constant
+        self.distance_travelled += self.velocity
 
         gas_action, _ = self.gas_q_learning.get_action(self.state)
         steer_action, _ = self.steer_q_learning.get_action(self.state)
@@ -113,7 +113,7 @@ class AutonomousDrivingControllerSeparate(AutonomousDrivingController):
             self.current_action[1] = 2
 
         self.acceleration = 0
-        super().update_transform(velocity_constant)
+        super().update_transform()
 
     def end_of_frame(self):
         g_reward, s_reward = self.evaluate_reward(True), self.evaluate_reward(False)
@@ -166,7 +166,7 @@ class AutonomousDrivingControllerCombined(AutonomousDrivingController):
 
         self.ai_dead = False
 
-    def update_transform(self, velocity_constant):
+    def update_transform(self):
         """
         0: nothing
         1: right steer
@@ -176,7 +176,7 @@ class AutonomousDrivingControllerCombined(AutonomousDrivingController):
         4: accelerate
         """
 
-        self.distance_travelled += self.velocity*velocity_constant
+        self.distance_travelled += self.velocity
 
         action, _ = self.q_learning.get_action(self.state)
 
@@ -208,7 +208,7 @@ class AutonomousDrivingControllerCombined(AutonomousDrivingController):
             self.current_action = 4
 
         self.acceleration = 0
-        super().update_transform(velocity_constant)
+        super().update_transform()
 
     def end_of_frame(self):
         reward = self.evaluate_reward()

@@ -21,6 +21,10 @@ class StraightRoad(Road):
         self.direction = direction  # 0 or 1, 1 is horizontal
         super().__init__("straight_road", grid_size)
 
+    @property
+    def rotation(self):
+        return self.direction
+
     def create_grid_image(self):
         # Rotate image based on direction
         return pygame.transform.rotate(self.road_images[0], 90*self.direction)
@@ -99,12 +103,19 @@ class CurvedRoad(Road):
     except FileNotFoundError:
         road_images = []
 
-    def __init__(self, rotation, section, grid_size):
+    def __init__(self, rotation, section, grid_size, width=2):
         self.rotation = rotation  # rotation is 0-3
         self.section = section  # 0-3, as curved road is 4 grid spaces
-        self.width = 2  # grid space width of curved road
+        self.width = width  # grid space width of curved road
 
-        super().__init__("curved_road_" + str(section), grid_size)
+        print("curved_road_" + str(self.width) + "_" + str(section))
+
+        super().__init__("curved_road_" + str(self.width) + "_" + str(section), grid_size)
+
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        # old saved maps dont have name_id set correctly, so when loading up, set it to the new name_id
+        self.name_id = "curved_road_" + str(self.width) + "_" + str(self.section)
 
     def create_grid_image(self):
         return pygame.transform.rotate(self.road_images[self.section], -self.rotation*90)
