@@ -1,6 +1,11 @@
 import numpy as np
 
 
+def stdfrm(m, p):
+    # standard form
+    return m*(10**p)
+
+
 def rotate_vector_acw(vector, angle):
     """
     :param vector: a 2 length numpy array

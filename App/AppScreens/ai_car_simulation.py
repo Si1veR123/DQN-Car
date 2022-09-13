@@ -4,6 +4,7 @@ Runs the main window, which simulates the ai car on the map, specified in the gi
 
 from App.AppScreens.app_helper_functions import draw_background
 from App.world import World
+from App.car_controller import CarControllerKinematic
 import global_settings as gs
 import numpy as np
 import pygame
@@ -23,6 +24,7 @@ def collision_filter(screen, world):
 
 def run_ai_car_simulation(screen, world: World, verbose, end_at_min_epsilon=False):
     world.initiate_cars()
+    world.ai_car.controller.end_of_episode(verbose)
 
     default_font = pygame.font.Font(pygame.font.get_default_font(), 24)
 
@@ -57,14 +59,23 @@ def run_ai_car_simulation(screen, world: World, verbose, end_at_min_epsilon=Fals
         # Trace all rays for ai car, which updates the Q learning state
         world.ai_car.trace_all_rays(world, screen)
 
-        # Move all cars
-        world.update_cars()
+        # Move all npc cars
+        world.update_npc_cars()
+
+        ai_update_frame = not bool(episode_frames % gs.Q_LEARNING_SETTINGS["TRAINING_FRAME_SKIP"])
+
+        if ai_update_frame:
+            world.ai_car.controller.update_transform()
+        else:
+            # if not updating AI, only run the base update, which moves the car without new actions
+            CarControllerKinematic.update_transform(world.ai_car.controller)
 
         # Check if crashed
         world.car_collision()
 
         # AI controller has things to do after moving and checking collision
-        world.ai_car.controller.end_of_frame()
+        if ai_update_frame:
+            world.ai_car.controller.end_of_frame()
 
         # Draw all cars to screen
         world.blit_cars(screen)
@@ -73,6 +84,8 @@ def run_ai_car_simulation(screen, world: World, verbose, end_at_min_epsilon=Fals
 
         # If AI car has crashed, reset all cars
         if world.ai_car.controller.ai_dead or (episode_frames >= gs.MAX_EPISODE_FRAMES and gs.TRAINING):
+            if verbose >= 1:
+                print("FPS:", str(int(clock.get_fps())))
             # check whether to exit loop, if min epsilon reached
             if end_at_min_epsilon and world.ai_car.controller.q_learning.epsilon == gs.Q_LEARNING_SETTINGS["EPSILON_MIN"]:
                 return

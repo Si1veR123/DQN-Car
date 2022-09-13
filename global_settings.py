@@ -1,3 +1,6 @@
+from misc_funcs import stdfrm
+
+
 SAVED_MAPS_ROOT = r"saved_maps/"
 SAVED_MODELS_ROOT = r"saved_models/"
 
@@ -33,7 +36,9 @@ MAX_EPISODE_FRAMES = 4000
 Q_LEARNING_SETTINGS = {
     "TRAINING": True,
 
-    "LEARNING_RATE": 1e-010,
+    "TRAINING_FRAME_SKIP": 2,  # 1 is every frame, 2 is every 2 frames etc (can make predicting future reward easier due to less states)
+
+    "LEARNING_RATE": stdfrm(3, -8),
 
     "GD_MOMENTUM": 0.9,
 
@@ -43,8 +48,8 @@ Q_LEARNING_SETTINGS = {
     "EPSILON_DECAY": 0.00004,
     "EPSILON_MIN": 0.1,
 
-    "TARGET_NET_COPY_STEPS": 50000,
-    "TRAIN_AMOUNT": 0.6,
+    "TARGET_NET_COPY_STEPS": 17000,
+    "TRAIN_AMOUNT": 0.8,
 
     "BUFFER_LENGTH": 4000
 }

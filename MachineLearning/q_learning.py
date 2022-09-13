@@ -97,7 +97,6 @@ class DeepQLearning:
             self.experience_buffer.pop(0)
 
     def update_target_network(self):
-        print("=========UPDATING TARGET NETWORK=========")
         # deepcopy keeps no references etc. to old values
         self.target_network = copy.deepcopy(self.network)
 
@@ -105,9 +104,10 @@ class DeepQLearning:
         raise NotImplementedError
 
     def train(self, verbose):
+
         if len(self.experience_buffer):
 
-            if verbose:
+            if verbose >= 2:
                 print("============================================")
 
             # number of experiences to train on
@@ -143,10 +143,10 @@ class DeepQLearning:
                 # correct q values
                 correct_q_values = self.get_q_values(state)
 
-                if self.frame_num % 10 == 0 and verbose >= 2:
+                if self.frame_num % 10 == 0 and verbose >= 3:
                     # dont print all Q values, only about 1/10 to reduce printed text
                     print("Q VALUES", correct_q_values)
-                if experience_num == len(self.experience_buffer)-1 and verbose >= 2:
+                if experience_num == len(self.experience_buffer)-1 and verbose >= 3:
                     # also print final Q values as it can be useful
                     print("Q VALUES FINAL", correct_q_values)
 
@@ -164,7 +164,7 @@ class DeepQLearning:
                 if self.frame_num % self.network_copy_steps == 0:
                     self.update_target_network()
 
-            if verbose:
+            if verbose >= 2:
                 print("Exploration:", self.epsilon)
                 print("Reward:", sum(map(lambda x: x[2], self.experience_buffer)))
                 print("============================================\n")
@@ -175,7 +175,7 @@ class DeepQLearning:
 
             self.experience_buffer = []
 
-            if verbose >= 2:
+            if verbose >= 3:
                 # a method of troubleshooting by predicting a state to see how large changes are
                 test_q_values = self.get_q_values(([30, 35, 43, 55, 300, 55, 43, 35, 30, 3]*100)[:self.state_n])
                 print("TEST Q VALUES", test_q_values)

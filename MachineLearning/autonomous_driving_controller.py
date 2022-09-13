@@ -98,9 +98,8 @@ class AutonomousDrivingControllerCombined(AutonomousDrivingController):
         super().update_transform()
 
     def end_of_frame(self):
-        reward = self.evaluate_reward()
-
         if gs.Q_LEARNING_SETTINGS["TRAINING"]:
+            reward = self.evaluate_reward()
             self.q_learning.update_experience_buffer(self.state, self.current_action, reward)
 
     def evaluate_reward(self):
@@ -114,6 +113,6 @@ class AutonomousDrivingControllerCombined(AutonomousDrivingController):
         elif self.current_action == 2:
             return 1
         elif self.current_action == 3:
-            return 0.7
+            return 0.1
         elif self.current_action == 4:
-            return 1.3
+            return 2

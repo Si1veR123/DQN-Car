@@ -49,7 +49,7 @@ def main_app(map_override=None, background=False, end_at_min_epsilon=False, verb
     # show reward graphs, error graphs and save models, IF TRAINING
     # return the DQN model
     controller = world.ai_car.controller
-    if gs.Q_LEARNING_SETTINGS["TRAINING"]:
+    if gs.Q_LEARNING_SETTINGS["TRAINING"] and not background:
         controller.q_learning.reward_graph()
         controller.q_learning.error_graph(color="red")
         controller.q_learning.save_model("combined")

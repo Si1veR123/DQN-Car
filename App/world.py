@@ -59,14 +59,19 @@ class Map:
     def load_map(cls, name):
         # load map by unpickling the grid array
         print("LOADED:", name)
-        with open(gs.SAVED_MAPS_ROOT + name, "rb") as file:
-            grid_loaded = pickle.load(file)
+        try:
+            with open(gs.SAVED_MAPS_ROOT + name, "rb") as file:
+                grid_loaded = pickle.load(file)
+            image = pygame.image.load_extended(gs.SAVED_MAPS_ROOT + name + ".png")
+        except (FileNotFoundError, OSError):
+            # try name as full path
+            with open(name, "rb") as file:
+                grid_loaded = pickle.load(file)
+            image = pygame.image.load_extended(name + ".png")
 
         # create new class with grid set as loaded grid
         map = cls(np.array(grid_loaded).shape[::-1])
         map.grid = grid_loaded
-
-        image = pygame.image.load_extended(gs.SAVED_MAPS_ROOT + name + ".png")
 
         return map, image
 
@@ -134,7 +139,7 @@ class World:
     def initiate_cars(self):
         """
         Move all cars to initial (random) positions
-        Tell each car to reset state
+        Tell each NPC car to reset state (AI is done separately)
         """
 
         # find all possible spawn places (straight roads)
@@ -166,9 +171,9 @@ class World:
 
             car.reset_state()
 
-    def update_cars(self):
+    def update_npc_cars(self):
         # update each car's controller
-        for car in self.all_cars:
+        for car in self.npc_cars:
             car.controller.update_transform()
 
     def blit_cars(self, screen):

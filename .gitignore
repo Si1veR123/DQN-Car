@@ -10,4 +10,4 @@ MachineLearning/__pycache__/
 SocketCommunication/__pycache__/
 App/__pycache__/
 /image_assets/editor.png
-tuning_results/
+tuning/tuning_results/
