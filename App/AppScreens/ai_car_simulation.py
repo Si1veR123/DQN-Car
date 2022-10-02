@@ -9,8 +9,6 @@ import numpy as np
 import pygame
 import view_filters
 
-from time import perf_counter
-
 
 def collision_filter(screen, world):
     for x in range(384):
