@@ -124,4 +124,5 @@ def run_map_selection(screen: pygame.Surface):
                         del loaded_names[index]
                         del loaded_maps[index]
 
-        pygame.display.update()
+        if pygame.display.get_surface() is not None:
+            pygame.display.update()

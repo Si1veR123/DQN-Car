@@ -10,8 +10,8 @@ class AutonomousDrivingController(CarControllerKinematic):
         super().__init__()
         self.state = [0 for _ in range(state_n)]
 
-        self.brake_amount = 0.03
-        self.accelerate_amount = 0.03
+        self.brake_amount = 0.5
+        self.accelerate_amount = 0.5
         self.steer_amount = 80
 
         self.max_velocity = 6
@@ -37,7 +37,7 @@ class AutonomousDrivingControllerCombined(AutonomousDrivingController):
     # driving controller with combined gas and steering networks
     def __init__(self, state_n):
         super().__init__(state_n)
-        self.q_learning = CustomModelQLearning(state_n, 5, gs.LOAD_MODEL)
+        self.q_learning = CustomModelQLearning(state_n, 3, gs.LOAD_MODEL)
 
     def end_of_episode(self, verbose=2):
         # New episode so reset controls
@@ -104,15 +104,15 @@ class AutonomousDrivingControllerCombined(AutonomousDrivingController):
 
     def evaluate_reward(self):
         if self.ai_dead:
-            return -10
+            return -1
 
         if self.current_action == 0:
-            return 1
+            return 0.01
         elif self.current_action == 1:
-            return 1
+            return 0.01
         elif self.current_action == 2:
-            return 1
+            return 0.01
         elif self.current_action == 3:
-            return 0.1
+            return 0
         elif self.current_action == 4:
-            return 2
+            return 0.02

@@ -3,7 +3,6 @@ import random
 np.random.seed(1)
 random.seed(1)
 
-
 import pygame
 pygame.init()
 
@@ -23,22 +22,21 @@ def main_app(map_override=None, background=False, end_at_min_epsilon=False, verb
     :param end_at_min_epsilon: close training window when min epsilon is reached
     :return: DeepQLearning object with learned parameters
     """
-    if background and map_override is None:
-        raise TypeError("Background without map override. Impossible to choose map.")
+    params = [map_override, background, end_at_min_epsilon]
+    if any(params) and not all(params):
+        raise TypeError("Run in background without required parameters. Impossible to choose map/end.")
 
     # Create Window
-    # if in background, make size (1, 1)
-    dim = (1, 1) if background else (gs.WIDTH, gs.HEIGHT)
-    screen = pygame.display.set_mode(dim)
+    # if in background, use a surface to simulate screen
+    screen = pygame.Surface((1, 1)) if background else pygame.display.set_mode((gs.WIDTH, gs.HEIGHT))
 
     socket = LocalTCPSocket(gs.PORT) if gs.USE_UNREAL_SOCKET else None
 
+    # ================================================= MAP BUILDER ====================================================
     if map_override is None:
         selected_map = run_map_selection(screen)
     else:
         selected_map = Map.load_map(map_override)[0]
-
-    # ================================================= MAP BUILDER ====================================================
 
     world = World(socket, selected_map)
     world.replicate_map_spawn()
@@ -57,4 +55,10 @@ def main_app(map_override=None, background=False, end_at_min_epsilon=False, verb
 
 
 if __name__ == '__main__':
-    main_app()
+    if input("Background: (y)") == "y":
+        q = main_app(background=True, map_override="10.09;00.53", end_at_min_epsilon=True)
+        q.reward_graph()
+        q.error_graph(color="red")
+        q.save_model("combined")
+    else:
+        main_app()

@@ -48,6 +48,10 @@ class NoCollision(BlockedFilter):
     blocked = ["collision"]
 
 
+class NoGrid(BlockedFilter):
+    blocked = ["grid"]
+
+
 class NoAiVis(BlockedFilter):
     blocked = ["ai_rays", "ai_ray_collisions"]
 

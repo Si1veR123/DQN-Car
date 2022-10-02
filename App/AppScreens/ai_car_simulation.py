@@ -4,11 +4,12 @@ Runs the main window, which simulates the ai car on the map, specified in the gi
 
 from App.AppScreens.app_helper_functions import draw_background
 from App.world import World
-from App.car_controller import CarControllerKinematic
 import global_settings as gs
 import numpy as np
 import pygame
 import view_filters
+
+from time import perf_counter
 
 
 def collision_filter(screen, world):
@@ -62,20 +63,13 @@ def run_ai_car_simulation(screen, world: World, verbose, end_at_min_epsilon=Fals
         # Move all npc cars
         world.update_npc_cars()
 
-        ai_update_frame = not bool(episode_frames % gs.Q_LEARNING_SETTINGS["TRAINING_FRAME_SKIP"])
-
-        if ai_update_frame:
-            world.ai_car.controller.update_transform()
-        else:
-            # if not updating AI, only run the base update, which moves the car without new actions
-            CarControllerKinematic.update_transform(world.ai_car.controller)
+        world.ai_car.controller.update_transform()
 
         # Check if crashed
         world.car_collision()
 
         # AI controller has things to do after moving and checking collision
-        if ai_update_frame:
-            world.ai_car.controller.end_of_frame()
+        world.ai_car.controller.end_of_frame()
 
         # Draw all cars to screen
         world.blit_cars(screen)
@@ -100,6 +94,8 @@ def run_ai_car_simulation(screen, world: World, verbose, end_at_min_epsilon=Fals
         screen.blit(speed_text, (200, 0))
 
         episode_frames += 1
-        pygame.display.update()
+
+        if pygame.display.get_surface() is not None:
+            pygame.display.update()
 
     view_filters.FILTERS.clear()

@@ -11,8 +11,9 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
 
 TUNING_SETTINGS = {
-    "LEARNING_RATE": [stdfrm(5, -8), stdfrm(1, -8), stdfrm(3, -8)],
-    "TARGET_NET_COPY_STEPS": [17000],
+    "LEARNING_RATE": [stdfrm(1, -5), stdfrm(5, -5)],
+    "TARGET_NET_COPY_STEPS": [3000, 10000],
+    "DISCOUNT_RATE": [0.93, 0.98]
 }
 
 
@@ -79,4 +80,4 @@ if __name__ == '__main__':
     print("MAIN PID:", os.getpid())
     with Pool(12) as pool:
         pool.map(process_func, args_with_q)
-    results.save("lr and target and discount net finer 2")
+    results.save("nn 10 layers up to 96")

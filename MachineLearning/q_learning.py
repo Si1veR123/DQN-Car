@@ -104,14 +104,14 @@ class DeepQLearning:
         raise NotImplementedError
 
     def train(self, verbose):
+        # number of experiences to train on
+        training_experiences_count = int(len(self.experience_buffer) * self.train_amount) - 1
 
-        if len(self.experience_buffer):
+        if training_experiences_count > 0:
 
             if verbose >= 2:
                 print("============================================")
 
-            # number of experiences to train on
-            training_experiences_count = int(len(self.experience_buffer) * self.train_amount) - 1
             # sample indicies (in experience buffer) of experiences to train on, randomly
             experiences_indices = random.sample(range(len(self.experience_buffer)), training_experiences_count)
 
@@ -219,18 +219,14 @@ class CustomModelQLearning(DeepQLearning):
     def create_network(self, **kwargs):
         return NeuralNetwork(
             [
-                ConnectedLayer(relu, self.state_n, 24),
-                ConnectedLayer(relu, 24, 48),
-                ConnectedLayer(relu, 48, 84),
-                ConnectedLayer(relu, 84, 128),
-                ConnectedLayer(relu, 128, 256),
-                ConnectedLayer(relu, 256, 256),
-                ConnectedLayer(relu, 256, 256),
-                ConnectedLayer(relu, 256, 128),
-                ConnectedLayer(relu, 128, 84),
-                ConnectedLayer(relu, 84, 48),
-                ConnectedLayer(relu, 48, 24),
-                ConnectedLayer(linear, 24, self.actions_n)
+                ConnectedLayer(relu, self.state_n, 12),
+                ConnectedLayer(relu, 12, 18),
+                ConnectedLayer(relu, 18, 36),
+                ConnectedLayer(relu, 36, 36),
+                ConnectedLayer(relu, 36, 36),
+                ConnectedLayer(relu, 36, 18),
+                ConnectedLayer(relu, 18, 9),
+                ConnectedLayer(linear, 9, self.actions_n)
             ], learning_rate=self.learning_rate, **kwargs)
 
     def get_q_values(self, state, target=False):

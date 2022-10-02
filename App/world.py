@@ -33,7 +33,8 @@ class Map:
 
         for row_num, row in enumerate(self.grid):
             for col_num, item in enumerate(row):
-
+                if isinstance(item, SolidBlock):
+                    continue
                 item.tick(game_time)
 
                 if item.image is not None:
@@ -146,7 +147,7 @@ class World:
         spawn_pos = []
         for row_num, row in enumerate(self.map.grid):
             for col_num, col in enumerate(row):
-                if type(col) == StraightRoad:
+                if isinstance(col, StraightRoad):
                     # tuple of possible spawn location and road direction
                     spawn_pos.append(((col_num, row_num), col.direction))
 

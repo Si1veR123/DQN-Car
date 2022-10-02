@@ -11,3 +11,4 @@ SocketCommunication/__pycache__/
 App/__pycache__/
 /image_assets/editor.png
 tuning/tuning_results/
+.vscode/

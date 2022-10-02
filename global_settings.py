@@ -30,28 +30,28 @@ FREE_ROAM = False  # no collision
 
 
 # ======== Deep Q Learning ========
-LOAD_MODEL = None
+LOAD_MODEL = "combined_model_02.10;17.16_0"
 MAX_EPISODE_FRAMES = 4000
 
 Q_LEARNING_SETTINGS = {
     "TRAINING": True,
 
-    "TRAINING_FRAME_SKIP": 2,  # 1 is every frame, 2 is every 2 frames etc (can make predicting future reward easier due to less states)
+    "MOVEMENT_PER_FRAME": 3,  # 1 is normal, 2 is double etc (can make predicting future reward easier due to less states)
 
-    "LEARNING_RATE": stdfrm(3, -8),
+    "LEARNING_RATE": stdfrm(1, -5),
 
-    "GD_MOMENTUM": 0.9,
+    "GD_MOMENTUM": 0.03,
 
-    "DISCOUNT_RATE": 0.999,
+    "DISCOUNT_RATE": 0.95,
 
-    "EPSILON_PROBABILITY": 1,
-    "EPSILON_DECAY": 0.00004,
-    "EPSILON_MIN": 0.1,
+    "EPSILON_PROBABILITY": 0.15,
+    "EPSILON_DECAY": 0.0001,
+    "EPSILON_MIN": 0.05,
 
-    "TARGET_NET_COPY_STEPS": 17000,
-    "TRAIN_AMOUNT": 0.8,
+    "TARGET_NET_COPY_STEPS": 5000,
+    "TRAIN_AMOUNT": 0.9,
 
-    "BUFFER_LENGTH": 4000
+    "BUFFER_LENGTH": 17000
 }
 
 # backward compatibility

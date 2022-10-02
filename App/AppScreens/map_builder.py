@@ -87,7 +87,8 @@ def run_map_builder(screen) -> Tuple[Map, bool]:
 
     draw_background(screen, grid=False)
     map_obj.blit_grid(screen, pygame.time.get_ticks() / 1000)
-    pygame.display.update()
+    if pygame.display.get_surface() is not None:
+        pygame.display.update()
 
     save = input("Save Map (y/n):") == "y"
     if save:

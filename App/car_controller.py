@@ -51,17 +51,20 @@ class CarControllerKinematic(CarController):
         # not really mathematically correct but works for its purpose
         # higher velocities turn less
 
+        movement_multiplier = int(gs.Q_LEARNING_SETTINGS["MOVEMENT_PER_FRAME"])
+
         # if steering angle is 0, dont calculate as sin(0)=0
         if self.steering_angle:
             radius = self.wheel_distance / np.sin(self.steering_angle * np.pi / 180)  # radius of steering circle
         else:
             radius = 99999999999999999
 
-        if self.velocity:
-            self.rotation += 2/radius
+        for n in range(movement_multiplier):
+            if self.velocity:
+                self.rotation += 2/radius
 
-        # move forward by the velocity rotated clockwise by rotation
-        self.location += rotate_vector_acw(np.array((0, self.velocity)), -self.rotation)
+            # move forward by the velocity rotated clockwise by rotation
+            self.location += rotate_vector_acw(np.array((0, self.velocity)), -self.rotation)
 
         self.velocity += self.acceleration
 

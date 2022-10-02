@@ -108,12 +108,10 @@ class CurvedRoad(Road):
         self.section = section  # 0-3, as curved road is 4 grid spaces
         self.width = width  # grid space width of curved road
 
-        print("curved_road_" + str(self.width) + "_" + str(section))
-
         super().__init__("curved_road_" + str(self.width) + "_" + str(section), grid_size)
 
-    def __setstate__(self, state):
-        super().__setstate__(state)
+    def __setstate__(self, state, alpha=False):
+        super().__setstate__(state, alpha=True)
         # old saved maps dont have name_id set correctly, so when loading up, set it to the new name_id
         self.name_id = "curved_road_" + str(self.width) + "_" + str(self.section)
 

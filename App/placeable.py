@@ -53,7 +53,7 @@ class Placeable:
         del state["image"]
         return state
 
-    def __setstate__(self, state):
+    def __setstate__(self, state, alpha=False):
         """Called when unpickling"""
 
         # reload state to self
@@ -61,6 +61,10 @@ class Placeable:
 
         # reload image using the method, and resize it
         self.image = pygame.transform.scale(self.create_grid_image(), tuple([gs.GRID_SIZE_PIXELS - 1]*2))
+        if alpha:
+            self.image = self.image.convert_alpha()
+        else:
+            self.image = self.image.convert()
 
 
 class SolidBlock(Placeable):

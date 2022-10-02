@@ -13,12 +13,12 @@ import global_settings as gs
 
 gs.Q_LEARNING_SETTINGS["TRAINING"] = False
 
-results = Results.load("lr and target and discount net finer 2")
+results = Results.load("nn 10 layers up to 64")
 
 default_map = Map.load_map("10.09;00.53")[0]
 
-lrs = []
-ncs = []
+x = []
+y = []
 drs = []
 rewards = []
 
@@ -33,10 +33,10 @@ for r in sorted(list(results), key=lambda x: x.discount_rate):
     print(r.mean_rewards, r.learning_rate, r.network_copy_steps)
     run_ai_car_simulation(screen, world, 3, False)
 
-    lrs.append(np.log10(r.learning_rate))
-    ncs.append(r.network_copy_steps)
+    x.append(np.log10(r.learning_rate))
+    y.append(np.random.random())
     drs.append(300 if r.discount_rate==0.95 else 100)
     rewards.append(r.mean_rewards)
 
-plt.scatter(lrs, ncs, s=drs, c=rewards, cmap="autumn")
+plt.scatter(x, y, s=drs, c=rewards, cmap="autumn")
 plt.show()
