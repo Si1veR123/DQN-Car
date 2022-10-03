@@ -1,5 +1,5 @@
 from SocketCommunication.tcp_socket import LocalTCPSocket
-from App.placeable import Placeable, SolidBlock
+from App.placeable import Placeable, BackgroundSolidBlock
 from App.car import AICar
 from App.road import StraightRoad, Road, CurvedRoad, LargeCurvedRoad
 from misc_funcs import color_lerp, rotate_vector_acw
@@ -26,14 +26,14 @@ class Map:
 
     def reset_grid(self, grid_dimensions):
         # Sets entire grid to SolidBlock with colour of background
-        self.grid = [[SolidBlock(gs.COL_BACKGROUND, gs.GRID_SIZE_PIXELS) for _ in range(grid_dimensions[0])] for _ in range(grid_dimensions[1])]
+        self.grid = [[BackgroundSolidBlock(gs.COL_BACKGROUND, gs.GRID_SIZE_PIXELS) for _ in range(grid_dimensions[0])] for _ in range(grid_dimensions[1])]
 
     def blit_grid(self, screen, game_time):
         # Tick and draw each Placeable
 
         for row_num, row in enumerate(self.grid):
             for col_num, item in enumerate(row):
-                if isinstance(item, SolidBlock):
+                if isinstance(item, BackgroundSolidBlock):
                     continue
                 item.tick(game_time)
 
@@ -90,7 +90,7 @@ class World:
         e.g. map, simulating cars, drawing everything to screen
     """
     def __init__(self,
-                 socket: typing.Union[LocalTCPSocket, None],
+                 socket: typing.Optional[LocalTCPSocket],
                  map: Map
                  ):
         # socket used to communicate with Unreal Engine

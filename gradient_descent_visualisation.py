@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -37,8 +36,12 @@ X, Y = np.meshgrid(X, Y)
 
 
 # Plot the surface.
-surf = ax.plot_wireframe(X, Y, Z, linewidth=0.05, antialiased=False)
-
+# Normalize to [0,1]
+norm = plt.Normalize(Z.min(), Z.max())
+colors = cm.coolwarm(norm(Z))
+rcount, ccount, _ = colors.shape
+surf = ax.plot_surface(X, Y, Z, linewidth=0.05, rcount=rcount, ccount=ccount, facecolors=colors, antialiased=False)
+surf.set_facecolor((0, 0, 0, 0.2))
 
 m = (int(bool(max(np.random.random()-0.5, 0)))-0.5)*2
 
@@ -46,7 +49,7 @@ line_x = [m*(9 - np.random.random()*2-1)]
 line_y = [m*(9 - np.random.random()*2-1)]
 line_z = [data_generator(line_x[0], line_y[0])+0.1]
 lr = 0.01
-rand = 0.2
+rand = 0.4
 line, = ax.plot(line_x, line_y, line_z, "red", lw=3, zorder=5)
 while True:
     if not (abs(line_x[-1]) > 10 or abs(line_y[-1]) > 10):

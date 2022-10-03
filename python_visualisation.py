@@ -55,7 +55,7 @@ def main_app(map_override=None, background=False, end_at_min_epsilon=False, verb
 
 
 if __name__ == '__main__':
-    if input("Background: (y)") == "y":
+    if gs.TRAINING and input("Background: (y)") == "y":
         q = main_app(background=True, map_override="10.09;00.53", end_at_min_epsilon=True)
         q.reward_graph()
         q.error_graph(color="red")

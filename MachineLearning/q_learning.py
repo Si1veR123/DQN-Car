@@ -222,8 +222,9 @@ class CustomModelQLearning(DeepQLearning):
                 ConnectedLayer(relu, self.state_n, 12),
                 ConnectedLayer(relu, 12, 18),
                 ConnectedLayer(relu, 18, 36),
-                ConnectedLayer(relu, 36, 36),
-                ConnectedLayer(relu, 36, 36),
+                ConnectedLayer(relu, 36, 50),
+                ConnectedLayer(relu, 50, 50),
+                ConnectedLayer(relu, 50, 36),
                 ConnectedLayer(relu, 36, 18),
                 ConnectedLayer(relu, 18, 9),
                 ConnectedLayer(linear, 9, self.actions_n)

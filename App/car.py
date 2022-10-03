@@ -71,7 +71,7 @@ class AICar(Car):
         self.ray_angle_range = 80
         self.ray_count = 9
         self.ray_distance = 300 * gs.SF
-        self.ray_check_frequency = 6 * gs.SF
+        self.ray_check_frequency = 10 * gs.SF
 
         super().__init__(car_name, AutonomousDrivingControllerCombined(self.ray_count + 1))  # add 1 for velocity state
 

@@ -30,7 +30,7 @@ FREE_ROAM = False  # no collision
 
 
 # ======== Deep Q Learning ========
-LOAD_MODEL = "combined_model_02.10;17.16_0"
+LOAD_MODEL = "combined_model_02.10;22.45_0"
 MAX_EPISODE_FRAMES = 4000
 
 Q_LEARNING_SETTINGS = {
@@ -40,15 +40,15 @@ Q_LEARNING_SETTINGS = {
 
     "LEARNING_RATE": stdfrm(1, -5),
 
-    "GD_MOMENTUM": 0.03,
+    "GD_MOMENTUM": 0.00,
 
     "DISCOUNT_RATE": 0.95,
 
     "EPSILON_PROBABILITY": 0.15,
-    "EPSILON_DECAY": 0.0001,
+    "EPSILON_DECAY": 0.00001,
     "EPSILON_MIN": 0.05,
 
-    "TARGET_NET_COPY_STEPS": 5000,
+    "TARGET_NET_COPY_STEPS": 3000,
     "TRAIN_AMOUNT": 0.9,
 
     "BUFFER_LENGTH": 17000

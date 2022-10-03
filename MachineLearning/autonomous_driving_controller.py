@@ -105,13 +105,13 @@ class AutonomousDrivingControllerCombined(AutonomousDrivingController):
     def evaluate_reward(self):
         if self.ai_dead:
             return -1
-
+        v = self.velocity/900
         if self.current_action == 0:
-            return 0.01
+            return v
         elif self.current_action == 1:
-            return 0.01
+            return v
         elif self.current_action == 2:
-            return 0.01
+            return v
         elif self.current_action == 3:
             return 0
         elif self.current_action == 4:

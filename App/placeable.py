@@ -61,10 +61,13 @@ class Placeable:
 
         # reload image using the method, and resize it
         self.image = pygame.transform.scale(self.create_grid_image(), tuple([gs.GRID_SIZE_PIXELS - 1]*2))
-        if alpha:
-            self.image = self.image.convert_alpha()
-        else:
-            self.image = self.image.convert()
+        try:
+            if alpha:
+                self.image = self.image.convert_alpha()
+            else:
+                self.image = self.image.convert()
+        except pygame.error:
+            print("Convert image error, likely running in background.")
 
 
 class SolidBlock(Placeable):
@@ -79,6 +82,10 @@ class SolidBlock(Placeable):
         surface = pygame.surface.Surface((1, 1))
         surface.fill(self.colour)
         return surface
+
+
+class BackgroundSolidBlock(SolidBlock):
+    pass
 
 
 class SolidRoadPath(SolidBlock):
